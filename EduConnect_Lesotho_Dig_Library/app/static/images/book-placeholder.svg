@@ -1,0 +1,33 @@
+<svg width="200" height="250" xmlns="http://www.w3.org/2000/svg">
+  <!-- Book cover background -->
+  <rect width="200" height="250" fill="#f8f9fa" stroke="#dee2e6" stroke-width="2" rx="8"/>
+  
+  <!-- Book spine shadow -->
+  <rect x="180" y="0" width="20" height="250" fill="#e9ecef" rx="0 8 8 0"/>
+  
+  <!-- Book icon -->
+  <g transform="translate(100, 125)">
+    <!-- Book base -->
+    <rect x="-30" y="-20" width="60" height="40" fill="#6c757d" rx="4"/>
+    
+    <!-- Book pages -->
+    <rect x="-25" y="-15" width="50" height="30" fill="#ffffff" stroke="#dee2e6" stroke-width="1" rx="2"/>
+    
+    <!-- Page lines -->
+    <line x1="-20" y1="-10" x2="20" y2="-10" stroke="#e9ecef" stroke-width="1"/>
+    <line x1="-20" y1="-5" x2="20" y2="-5" stroke="#e9ecef" stroke-width="1"/>
+    <line x1="-20" y1="0" x2="20" y2="0" stroke="#e9ecef" stroke-width="1"/>
+    <line x1="-20" y1="5" x2="20" y2="5" stroke="#e9ecef" stroke-width="1"/>
+    <line x1="-20" y1="10" x2="20" y2="10" stroke="#e9ecef" stroke-width="1"/>
+  </g>
+  
+  <!-- No cover text -->
+  <text x="100" y="200" text-anchor="middle" font-family="Arial, sans-serif" font-size="14" fill="#6c757d">
+    No Cover Available
+  </text>
+  
+  <!-- Library logo/name -->
+  <text x="100" y="30" text-anchor="middle" font-family="Arial, sans-serif" font-size="12" font-weight="bold" fill="#2c5aa0">
+    Butha-Buthe Library
+  </text>
+</svg>

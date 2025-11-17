@@ -1,0 +1,242 @@
+{% extends "base.html" %}
+
+{% block title %}Subscription Plans - {{ library_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center mb-5">
+                <h1 class="display-5 fw-bold text-primary">
+                    <i class="fas fa-credit-card me-3"></i>Choose Your Plan
+                </h1>
+                <p class="lead text-muted">
+                    Select a subscription plan that suits your reading needs
+                </p>
+            </div>
+        </div>
+    </div>
+
+    {% if current_subscription %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h5><i class="fas fa-info-circle me-2"></i>Current Subscription</h5>
+                <p class="mb-2">
+                    You are currently subscribed to the <strong>{{ current_subscription.plan.name }}</strong> plan.
+                </p>
+                <p class="mb-0">
+                    <small class="text-muted">
+                        Active until {{ current_subscription.end_date.strftime('%B %d, %Y') }}
+                        ({{ current_subscription.days_remaining }} days remaining)
+                    </small>
+                </p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="row justify-content-center">
+        {% for plan in plans %}
+        <div class="col-lg-4 col-md-6 mb-4">
+            <div class="card h-100 {% if current_subscription and current_subscription.plan_id == plan.id %}border-primary{% else %}border-light{% endif %} shadow">
+                {% if plan.name.lower() == 'premium' %}
+                <div class="card-header bg-warning text-dark text-center">
+                    <i class="fas fa-crown me-2"></i>Most Popular
+                </div>
+                {% endif %}
+                
+                <div class="card-body d-flex flex-column">
+                    <div class="text-center mb-4">
+                        <h3 class="card-title text-primary">{{ plan.name }}</h3>
+                        <div class="display-6 fw-bold text-dark">
+                            LSL {{ "%.2f"|format(plan.price) }}
+                            <small class="text-muted fs-6">
+                                / {{ plan.duration_days }} days
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <p class="text-muted">{{ plan.description or 'Access to library resources' }}</p>
+                    </div>
+
+                    <ul class="list-unstyled mb-4 flex-grow-1">
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Borrow up to <strong>{{ plan.max_books }} books</strong> at once
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Access to digital library
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            {{ plan.duration_days }} days access period
+                        </li>
+                        {% if plan.max_books >= 3 %}
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Priority book reservations
+                        </li>
+                        {% endif %}
+                        {% if plan.max_books >= 5 %}
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Extended borrowing period
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            Access to premium digital content
+                        </li>
+                        {% endif %}
+                        {% if plan.name.lower() == 'premium' %}
+                        <li class="mb-2">
+                            <i class="fas fa-check text-success me-2"></i>
+                            24/7 customer support
+                        </li>
+                        {% endif %}
+                    </ul>
+
+                    <div class="text-center">
+                        {% if current_subscription and current_subscription.plan_id == plan.id %}
+                        <button class="btn btn-outline-primary btn-lg w-100" disabled>
+                            <i class="fas fa-check me-2"></i>Current Plan
+                        </button>
+                        {% elif current_subscription %}
+                        <button class="btn btn-outline-secondary btn-lg w-100" disabled>
+                            <i class="fas fa-info-circle me-2"></i>Already Subscribed
+                        </button>
+                        {% else %}
+                        <form method="POST" action="{{ url_for('subscription.subscribe', plan_id=plan.id) }}" class="d-inline">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                            <button type="submit" class="btn {% if plan.name.lower() == 'premium' %}btn-warning{% else %}btn-primary{% endif %} btn-lg w-100">
+                                <i class="fas fa-shopping-cart me-2"></i>Subscribe Now
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    {% if not plans %}
+    <div class="row">
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-exclamation-triangle fa-3x text-muted mb-3"></i>
+                <h3 class="text-muted">No Subscription Plans Available</h3>
+                <p class="text-muted">Please contact the library administrator for more information.</p>
+                <a href="{{ url_for('main.index') }}" class="btn btn-primary">
+                    <i class="fas fa-home me-2"></i>Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- FAQ Section -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h3 class="text-center mb-4">Frequently Asked Questions</h3>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="accordion" id="faqAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="faq1">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse1">
+                            How do I cancel my subscription?
+                        </button>
+                    </h2>
+                    <div id="faqCollapse1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            You can cancel your subscription at any time from your subscription dashboard. Your access will continue until the end of your current billing period.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="faq2">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse2">
+                            What payment methods are accepted?
+                        </button>
+                    </h2>
+                    <div id="faqCollapse2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            We accept cash payments at the library, mobile money (M-Pesa, EcoCash), and bank transfers. Credit/debit card payments will be available soon.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="faq3">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse3">
+                            Can I change my subscription plan?
+                        </button>
+                    </h2>
+                    <div id="faqCollapse3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            Yes, you can upgrade or downgrade your plan at any time. Changes will take effect at the start of your next billing cycle.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="faq4">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faqCollapse4">
+                            What happens if I exceed my book limit?
+                        </button>
+                    </h2>
+                    <div id="faqCollapse4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+                        <div class="accordion-body">
+                            You will need to return some books before borrowing additional ones. Consider upgrading to a plan with a higher book limit if you need more books.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-12 text-center">
+            <div class="bg-light p-4 rounded">
+                <h5>Need Help Choosing?</h5>
+                <p class="mb-3">Contact our library staff for personalized recommendations</p>
+                <a href="mailto:help@library.co.ls" class="btn btn-outline-primary me-2">
+                    <i class="fas fa-envelope me-2"></i>Email Us
+                </a>
+                <a href="tel:+26628123456" class="btn btn-outline-primary">
+                    <i class="fas fa-phone me-2"></i>Call Us
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Add confirmation for subscription
+    const subscribeButtons = document.querySelectorAll('button[type="submit"]');
+    subscribeButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            if (!button.disabled) {
+                const form = button.closest('form');
+                const planName = button.closest('.card').querySelector('.card-title').textContent;
+                const planPrice = button.closest('.card').querySelector('.display-6').textContent.split('LSL')[1].split('/')[0].trim();
+                
+                if (!confirm(`Subscribe to ${planName} plan for LSL ${planPrice}?`)) {
+                    e.preventDefault();
+                }
+            }
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile - {{ library_name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-edit me-2"></i>Edit Profile
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Profile Image Preview -->
+                    <div class="text-center mb-4">
+                        <div class="profile-image-container position-relative d-inline-block">
+                            {% if current_user.profile_image %}
+                                <img src="{{ url_for('static', filename='uploads/profiles/' + current_user.profile_image) }}" 
+                                     class="rounded-circle profile-preview" 
+                                     id="profilePreview"
+                                     alt="Profile" 
+                                     style="width: 150px; height: 150px; object-fit: cover; border: 4px solid #007bff;">
+                            {% else %}
+                                <div class="rounded-circle profile-preview bg-light d-flex align-items-center justify-content-center" 
+                                     id="profilePreview"
+                                     style="width: 150px; height: 150px; border: 4px solid #007bff;">
+                                    <i class="fas fa-user fa-4x text-muted"></i>
+                                </div>
+                            {% endif %}
+                            <label for="profile_image" class="position-absolute bottom-0 end-0 btn btn-primary btn-sm rounded-circle" 
+                                   style="width: 40px; height: 40px; cursor: pointer;"
+                                   title="Change profile picture">
+                                <i class="fas fa-camera"></i>
+                            </label>
+                        </div>
+                        <div class="mt-2">
+                            <small class="text-muted">Click camera icon to upload profile picture</small>
+                        </div>
+                    </div>
+                    
+                    <form method="POST" enctype="multipart/form-data" id="profileForm">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        
+                        <!-- Hidden File Input -->
+                        <input type="file" class="d-none" id="profile_image" name="profile_image" 
+                               accept="image/jpeg,image/png,image/jpg,image/gif">
+                        
+                        <div class="mb-3">
+                            <label for="first_name" class="form-label">First Name</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" 
+                                   value="{{ current_user.first_name }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="last_name" class="form-label">Last Name</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" 
+                                   value="{{ current_user.last_name }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="{{ current_user.email }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="phone" class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control" id="phone" name="phone" 
+                                   value="{{ current_user.phone or '' }}">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="district" class="form-label">District</label>
+                            <select class="form-select" id="district" name="district">
+                                <option value="">Select District</option>
+                                {% for district in districts %}
+                                <option value="{{ district }}" 
+                                        {% if current_user.district == district %}selected{% endif %}>
+                                    {{ district }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Save Changes
+                            </button>
+                            <a href="{{ url_for('auth.profile') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-1"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Profile image upload and preview
+document.getElementById('profile_image').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('File size must be less than 5MB');
+            e.target.value = '';
+            return;
+        }
+        
+        // Validate file type
+        const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+        if (!validTypes.includes(file.type)) {
+            alert('Please upload a valid image file (JPEG, PNG, or GIF)');
+            e.target.value = '';
+            return;
+        }
+        
+        // Preview the image
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById('profilePreview');
+            if (preview.tagName === 'IMG') {
+                preview.src = e.target.result;
+            } else {
+                // Replace div with img
+                const img = document.createElement('img');
+                img.src = e.target.result;
+                img.className = 'rounded-circle profile-preview';
+                img.id = 'profilePreview';
+                img.alt = 'Profile';
+                img.style.cssText = 'width: 150px; height: 150px; object-fit: cover; border: 4px solid #007bff;';
+                preview.parentNode.replaceChild(img, preview);
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+});
+</script>
+{% endblock %}

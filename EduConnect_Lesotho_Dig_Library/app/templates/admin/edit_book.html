@@ -1,0 +1,568 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Book - Admin - {{ library_name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Admin Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.manage_books') }}">Manage Books</a></li>
+                    <li class="breadcrumb-item active">Edit: {{ book.title }}</li>
+                </ol>
+            </nav>
+            <h1 class="display-6 mb-2">
+                <i class="fas fa-edit me-2"></i>Edit Book
+            </h1>
+            <p class="text-muted">Update book information and settings</p>
+        </div>
+    </div>
+
+    <!-- Edit Book Form -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-warning text-dark">
+                    <h4 class="mb-0"><i class="fas fa-book me-2"></i>{{ book.title }}</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data" id="editBookForm">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        
+                        <!-- Basic Information -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-warning border-bottom pb-2">Basic Information</h5>
+                            </div>
+                            
+                            <div class="col-md-8 mb-3">
+                                <label for="title" class="form-label"><strong>Title *</strong></label>
+                                <input type="text" class="form-control" id="title" name="title" required
+                                       value="{{ book.title }}">
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="isbn" class="form-label"><strong>ISBN</strong></label>
+                                <input type="text" class="form-control" id="isbn" name="isbn"
+                                       value="{{ book.isbn or '' }}">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="author" class="form-label"><strong>Author *</strong></label>
+                                <input type="text" class="form-control" id="author" name="author" required
+                                       value="{{ book.author }}">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="category_id" class="form-label"><strong>Category *</strong></label>
+                                <select class="form-select" id="category_id" name="category_id" required>
+                                    <option value="">Select a category</option>
+                                    {% for category in categories %}
+                                    <option value="{{ category.id }}" 
+                                            {% if book.category_id == category.id %}selected{% endif %}>
+                                        {{ category.name }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-12 mb-3">
+                                <label for="description" class="form-label"><strong>Description</strong></label>
+                                <textarea class="form-control" id="description" name="description" rows="4">{{ book.description or '' }}</textarea>
+                                <div class="form-text">
+                                    <span id="desc-count">{{ book.description|length if book.description else 0 }}</span>/500 characters
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Publication Details -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-warning border-bottom pb-2">Publication Details</h5>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="publisher" class="form-label"><strong>Publisher</strong></label>
+                                <input type="text" class="form-control" id="publisher" name="publisher"
+                                       value="{{ book.publisher or '' }}">
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <label for="publication_date" class="form-label"><strong>Publication Date</strong></label>
+                                <input type="date" class="form-control" id="publication_date" name="publication_date"
+                                       value="{{ book.publication_date.strftime('%Y-%m-%d') if book.publication_date else '' }}">
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <label for="pages" class="form-label"><strong>Pages</strong></label>
+                                <input type="number" class="form-control" id="pages" name="pages" min="1"
+                                       value="{{ book.pages or '' }}">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="language" class="form-label"><strong>Language</strong></label>
+                                <select class="form-select" id="language" name="language">
+                                    <option value="">Select language</option>
+                                    <option value="English" {% if book.language == 'English' %}selected{% endif %}>English</option>
+                                    <option value="Sesotho" {% if book.language == 'Sesotho' %}selected{% endif %}>Sesotho</option>
+                                    <option value="Afrikaans" {% if book.language == 'Afrikaans' %}selected{% endif %}>Afrikaans</option>
+                                    <option value="French" {% if book.language == 'French' %}selected{% endif %}>French</option>
+                                    <option value="Spanish" {% if book.language == 'Spanish' %}selected{% endif %}>Spanish</option>
+                                    <option value="Other" {% if book.language == 'Other' %}selected{% endif %}>Other</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="edition" class="form-label"><strong>Edition</strong></label>
+                                <input type="text" class="form-control" id="edition" name="edition"
+                                       value="{{ book.edition or '' }}">
+                            </div>
+                        </div>
+
+                        <!-- Inventory Details -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-warning border-bottom pb-2">Inventory Details</h5>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="total_copies" class="form-label"><strong>Total Copies *</strong></label>
+                                <input type="number" class="form-control" id="total_copies" name="total_copies" 
+                                       min="1" value="{{ book.total_copies }}" required>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="available_copies" class="form-label"><strong>Available Copies *</strong></label>
+                                <input type="number" class="form-control" id="available_copies" name="available_copies" 
+                                       min="0" value="{{ book.available_copies }}" required>
+                                <div class="form-text">Currently borrowed: {{ book.total_copies - book.available_copies }}</div>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="location" class="form-label"><strong>Shelf Location</strong></label>
+                                <input type="text" class="form-control" id="location" name="location"
+                                       value="{{ book.location or '' }}">
+                            </div>
+                        </div>
+
+                        <!-- Digital Book Options -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-warning border-bottom pb-2">Digital Options</h5>
+                            </div>
+                            
+                            <div class="col-12 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="is_digital" name="is_digital"
+                                           {% if book.is_digital %}checked{% endif %}>
+                                    <label class="form-check-label" for="is_digital">
+                                        <strong>This is a digital book</strong>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div id="digital-options" {% if not book.is_digital %}style="display: none;"{% endif %}>
+                                {% if book.file_path %}
+                                <div class="col-12 mb-3">
+                                    <div class="alert alert-info d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <i class="fas fa-file-pdf me-1"></i>
+                                            <strong>Current file:</strong> {{ book.file_path.split('/')[-1] }}
+                                        </div>
+                                        <a href="{{ url_for('static', filename='uploads/books/' + book.file_path.split('/')[-1]) }}" 
+                                           class="btn btn-sm btn-outline-primary" target="_blank">
+                                            <i class="fas fa-download me-1"></i>View/Download
+                                        </a>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                <div class="col-12 mb-3">
+                                    <label for="file_upload" class="form-label"><strong>Upload New Book File</strong></label>
+                                    <input type="file" class="form-control" id="file_upload" name="file_upload"
+                                           accept=".pdf,.epub,.txt,.doc,.docx,.mobi,.azw,.azw3">
+                                    <div class="form-text">
+                                        <i class="fas fa-info-circle me-1"></i>
+                                        Leave empty to keep current file. 
+                                        <br><strong>Supported formats:</strong> PDF, EPUB, TXT, DOC, DOCX, MOBI, AZW, AZW3 (Max: 50MB)
+                                    </div>
+                                    <div id="file-info" class="mt-2 small text-muted"></div>
+                                </div>
+                                
+                                <div class="col-12 mb-3">
+                                    <label for="download_url" class="form-label"><strong>External Download URL</strong></label>
+                                    <input type="url" class="form-control" id="download_url" name="download_url"
+                                           value="{{ book.download_url or '' }}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cover Image -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-warning border-bottom pb-2">Cover Image</h5>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                    <label for="cover_image" class="form-label"><strong>Upload New Cover Image</strong></label>
+                                    <input type="file" class="form-control" id="cover_image" name="cover_image"
+                                        accept="image/*">
+                                    <div class="form-text">Leave empty to keep current cover. Max size: 5MB. Allowed types: JPEG, PNG, GIF, SVG, WEBP.</div>
+                                    <div id="cover-image-error" class="text-danger mt-2" style="display:none;"></div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <div id="cover-preview" class="border rounded p-3 text-center bg-light" style="height: 200px;">
+                                    {% if book.cover_image %}
+                                        <img id="cover-preview-img" src="{{ url_for('static', filename='uploads/covers/' + book.cover_image) }}" 
+                                             alt="Current cover" style="max-width: 100%; max-height: 180px; object-fit: cover;">
+                                    {% else %}
+                                        <img id="cover-preview-img" style="display:none; max-width: 100%; max-height: 180px; object-fit: cover;">
+                                        <i class="fas fa-image fa-3x text-muted mb-2" id="cover-preview-icon"></i>
+                                        <p class="text-muted mb-0" id="cover-preview-text">No cover image</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Information -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-warning border-bottom pb-2">Additional Information</h5>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="tags" class="form-label"><strong>Tags</strong></label>
+                                <input type="text" class="form-control" id="tags" name="tags"
+                                       value="{{ book.tags or '' }}">
+                                <div class="form-text">Separate tags with commas</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="reading_level" class="form-label"><strong>Reading Level</strong></label>
+                                <select class="form-select" id="reading_level" name="reading_level">
+                                    <option value="">Select reading level</option>
+                                    <option value="Beginner" {% if book.reading_level == 'Beginner' %}selected{% endif %}>Beginner</option>
+                                    <option value="Intermediate" {% if book.reading_level == 'Intermediate' %}selected{% endif %}>Intermediate</option>
+                                    <option value="Advanced" {% if book.reading_level == 'Advanced' %}selected{% endif %}>Advanced</option>
+                                    <option value="Academic" {% if book.reading_level == 'Academic' %}selected{% endif %}>Academic</option>
+                                    <option value="Children" {% if book.reading_level == 'Children' %}selected{% endif %}>Children</option>
+                                    <option value="Young Adult" {% if book.reading_level == 'Young Adult' %}selected{% endif %}>Young Adult</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-12 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured"
+                                           {% if book.is_featured %}checked{% endif %}>
+                                    <label class="form-check-label" for="is_featured">
+                                        <strong><i class="fas fa-star me-1 text-warning"></i>Feature this book on homepage</strong>
+                                        <small class="text-muted d-block">Featured books appear in the top section of the homepage</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Book Statistics -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-warning border-bottom pb-2">Statistics</h5>
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">{{ book.borrow_count or 0 }}</h5>
+                                        <p class="card-text small">Times Borrowed</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">{{ book.book_reviews.count() }}</h5>
+                                        <p class="card-text small">Reviews</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">{{ book.average_rating or 'N/A' }}</h5>
+                                        <p class="card-text small">Average Rating</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center">
+                                        <h5 class="card-title">{{ book.book_reservations.count() }}</h5>
+                                        <p class="card-text small">Active Reservations</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <a href="{{ url_for('admin.manage_books') }}" class="btn btn-outline-secondary">
+                                            <i class="fas fa-arrow-left me-1"></i>Back to Books
+                                        </a>
+                                        <a href="{{ url_for('main.book_detail', book_id=book.id) }}" 
+                                           class="btn btn-outline-info ms-2">
+                                            <i class="fas fa-eye me-1"></i>View Book
+                                        </a>
+                                    </div>
+                                    <div>
+                                        <button type="button" class="btn btn-outline-danger me-2" onclick="deleteBook()">
+                                            <i class="fas fa-trash me-1"></i>Delete Book
+                                        </button>
+                                        <button type="submit" class="btn btn-warning">
+                                            <i class="fas fa-save me-1"></i>Update Book
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                <script>
+                document.getElementById('cover_image').addEventListener('change', function(event) {
+                    const file = event.target.files[0];
+                    const errorDiv = document.getElementById('cover-image-error');
+                    const previewImg = document.getElementById('cover-preview-img');
+                    const previewIcon = document.getElementById('cover-preview-icon');
+                    const previewText = document.getElementById('cover-preview-text');
+                    errorDiv.style.display = 'none';
+                    if (!file) {
+                        return;
+                    }
+                    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/svg+xml', 'image/webp'];
+                    const maxSize = 5 * 1024 * 1024;
+                    if (!allowedTypes.includes(file.type)) {
+                        errorDiv.textContent = 'Invalid image type. Allowed: JPEG, PNG, GIF, SVG, WEBP.';
+                        errorDiv.style.display = 'block';
+                        event.target.value = '';
+                        return;
+                    }
+                    if (file.size > maxSize) {
+                        errorDiv.textContent = 'Image file is too large (max 5MB).';
+                        errorDiv.style.display = 'block';
+                        event.target.value = '';
+                        return;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        previewImg.src = e.target.result;
+                        previewImg.style.display = 'inline-block';
+                        if (previewIcon) previewIcon.style.display = 'none';
+                        if (previewText) previewText.style.display = 'none';
+                    };
+                    reader.readAsDataURL(file);
+                });
+                </script>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Book</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete "<strong>{{ book.title }}</strong>"?</p>
+                <p class="text-danger"><small>This action cannot be undone and will remove all associated records including borrowings, reviews, and reservations.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('admin.delete_book', book_id=book.id) }}" class="d-inline">
+                    {{ csrf_token() }}
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>Delete Book
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.border-bottom {
+    border-color: #e9ecef !important;
+}
+
+#cover-preview {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#cover-preview img {
+    border-radius: 4px;
+}
+
+.card.bg-light {
+    border: 1px solid #e9ecef;
+}
+
+.form-text {
+    font-size: 0.8rem;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Digital book toggle
+document.getElementById('is_digital').addEventListener('change', function() {
+    const digitalOptions = document.getElementById('digital-options');
+    if (this.checked) {
+        digitalOptions.style.display = 'block';
+    } else {
+        digitalOptions.style.display = 'none';
+    }
+});
+
+// Book file upload info
+document.getElementById('file_upload').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const fileInfo = document.getElementById('file-info');
+    
+    if (file) {
+        const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
+        const extension = file.name.split('.').pop().toUpperCase();
+        
+        fileInfo.innerHTML = `
+            <div class="alert alert-success py-2 mb-0">
+                <i class="fas fa-check-circle me-1"></i>
+                <strong>Selected:</strong> ${file.name} 
+                <span class="badge bg-primary ms-2">${extension}</span>
+                <span class="badge bg-info ms-1">${sizeMB} MB</span>
+            </div>
+        `;
+        
+        if (sizeMB > 50) {
+            fileInfo.innerHTML = `
+                <div class="alert alert-danger py-2 mb-0">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    File is too large (${sizeMB} MB). Maximum size is 50 MB.
+                </div>
+            `;
+            this.value = '';
+        }
+    } else {
+        fileInfo.innerHTML = '';
+    }
+});
+
+// Cover image preview
+document.getElementById('cover_image').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById('cover-preview');
+    
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.innerHTML = `<img src="${e.target.result}" alt="New cover preview" style="max-width: 100%; max-height: 180px; object-fit: cover;">`;
+        };
+        reader.readAsDataURL(file);
+    }
+});
+
+// Description character count
+document.getElementById('description').addEventListener('input', function() {
+    const count = this.value.length;
+    const counter = document.getElementById('desc-count');
+    counter.textContent = count;
+    
+    if (count > 500) {
+        counter.classList.add('text-danger');
+        this.value = this.value.substring(0, 500);
+        counter.textContent = '500';
+    } else {
+        counter.classList.remove('text-danger');
+    }
+});
+
+// Sync available copies with total copies
+document.getElementById('total_copies').addEventListener('input', function() {
+    const totalCopies = parseInt(this.value) || 0;
+    const availableCopies = document.getElementById('available_copies');
+    const currentAvailable = parseInt(availableCopies.value) || 0;
+    
+    if (currentAvailable > totalCopies) {
+        availableCopies.value = totalCopies;
+    }
+    
+    availableCopies.max = totalCopies;
+});
+
+// Form validation
+document.getElementById('editBookForm').addEventListener('submit', function(e) {
+    const totalCopies = parseInt(document.getElementById('total_copies').value);
+    const availableCopies = parseInt(document.getElementById('available_copies').value);
+    
+    if (availableCopies > totalCopies) {
+        e.preventDefault();
+        alert('Available copies cannot exceed total copies.');
+        document.getElementById('available_copies').focus();
+        return;
+    }
+    
+    // Show loading state
+    const submitBtn = this.querySelector('button[type="submit"]');
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Updating...';
+    submitBtn.disabled = true;
+});
+
+// Delete book function
+function deleteBook() {
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+
+// Auto-save functionality
+let hasUnsavedChanges = false;
+
+document.querySelectorAll('input, select, textarea').forEach(element => {
+    if (element.type !== 'file' && element.type !== 'submit') {
+        element.addEventListener('input', function() {
+            hasUnsavedChanges = true;
+        });
+        element.addEventListener('change', function() {
+            hasUnsavedChanges = true;
+        });
+    }
+});
+
+// Warn before leaving with unsaved changes
+window.addEventListener('beforeunload', function(e) {
+    if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
+});
+
+// Clear warning on form submit
+document.getElementById('editBookForm').addEventListener('submit', function() {
+    hasUnsavedChanges = false;
+});
+</script>
+{% endblock %}

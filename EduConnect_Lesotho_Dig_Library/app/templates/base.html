@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="EduConnect Lesotho Digital Library - Accessible digital resources for rural communities">
+    <title>{% block title %}{{ library_name }}{% endblock %}</title>
+    <!-- Bootstrap CSS for mobile-first responsive design -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS optimized for the library system -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
+    <!-- CSRF token for AJAX requests -->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <!-- Custom CSS optimized for low bandwidth -->
+    <style>
+        :root {
+            --primary-color: blue;
+            --secondary-color: #388E3C;
+            --accent-color: #FFA726;
+            --text-color: #212121;
+            --bg-color: #F5F5F5;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+        }
+        .navbar-brand {
+            font-weight: bold;
+            color: #ffffff !important;
+            font-size: 2rem;
+        }
+        .navbar {
+            background-color: var(--primary-color) !important;
+            box-shadow: 0 2px 8px rgba(44,90,160,0.08);
+        }
+        .nav-link {
+            color: #ffffff !important;
+        }
+        .nav-link:hover {
+            color: var(--accent-color) !important;
+        }
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        .card {
+            border: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 1rem;
+        }
+        .book-card {
+            transition: transform 0.2s;
+        }
+        .book-card:hover {
+            transform: translateY(-2px);
+        }
+        .footer {
+            background-color: var(--primary-color);
+            color: #ffffff !important;
+            margin-top: 0;
+            margin-bottom: 0;
+            padding-top: 2.5rem;
+            padding-bottom: 2.5rem;
+        }
+        .footer h5, .footer h6 {
+            color: #FFD700 !important;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            margin-bottom: 0.75rem;
+        }
+        .footer, .footer p, .footer small {
+            color: white !important;
+        }
+        .footer a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s, text-shadow 0.2s;
+        }
+        .footer a:hover {
+            color: #fbbf24;
+            text-shadow: 0 0 8px #fbbf24;
+        }
+        .footer .row > div {
+            margin-bottom: 1.5rem;
+        }
+        .alert {
+            border-radius: 0.5rem;
+        }
+        .navbar-toggler {
+            border: none;
+        }
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 10px;
+            }
+            .card {
+                margin-bottom: 0.5rem;
+            }
+        }
+        .offline-indicator {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #f44336;
+            color: white;
+            text-align: center;
+            padding: 5px;
+            z-index: 9999;
+            display: none;
+        }
+        .online .offline-indicator {
+            display: none;
+        }
+        .offline .offline-indicator {
+            display: block;
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+    <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+</head>
+<body>
+    <!-- Offline indicator -->
+    <div class="offline-indicator">
+        <i class="fas fa-wifi"></i> You are currently offline. Some features may be limited.
+    </div>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('main.index') }}" style="color: #FFD700 !important; font-weight: bold; font-size: 2rem;">
+                <i class="fas fa-book-reader"></i>
+                EduConnect Lesotho
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+                <ul class="navbar-nav">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.index') }}">
+                                <i class="fas fa-home"></i> Home
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.search') }}">
+                                <i class="fas fa-search"></i> Search
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.categories') }}">
+                                <i class="fas fa-tags"></i> Categories
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.digital_literacy') }}">
+                                <i class="fas fa-graduation-cap"></i> Digital Literacy
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('main.index') }}">
+                                <i class="fas fa-home"></i> Home
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.login') }}">
+                                <i class="fas fa-search"></i> Search
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.login') }}">
+                                <i class="fas fa-tags"></i> Categories
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.login') }}">
+                                <i class="fas fa-graduation-cap"></i> Digital Literacy
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user"></i>
+                                {{ current_user.first_name }}
+                                {% if unread_notifications > 0 %}
+                                    <span class="badge bg-danger">{{ unread_notifications }}</span>
+                                {% endif %}
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{{ url_for('auth.profile') }}">
+                                    <i class="fas fa-user-circle"></i> Profile
+                                </a></li>
+                                <li><a class="dropdown-item" href="{{ url_for('books.my_books') }}">
+                                    <i class="fas fa-book"></i> My Books
+                                </a></li>
+                                {% if not current_user.is_admin() %}
+                                <li><a class="dropdown-item" href="{{ url_for('subscription.index') }}">
+                                    <i class="fas fa-credit-card"></i> My Subscription
+                                </a></li>
+                                {% endif %}
+                                {% if current_user.is_librarian() %}
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{{ url_for('admin.dashboard') }}">
+                                        <i class="fas fa-cog"></i> Admin Panel
+                                    </a></li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                                    <i class="fas fa-sign-out-alt"></i> Logout
+                                </a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.login') }}">
+                                <i class="fas fa-sign-in-alt"></i> Login
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-warning fw-bold" href="{{ url_for('auth.register') }}">
+                                <i class="fas fa-user-plus"></i> Register to access features
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <!-- Flash messages -->
+    <div class="container mt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+    <!-- Main content -->
+    <main class="container my-4">
+        
+        {% block content %}{% endblock %}
+    </main>
+    <!-- Footer -->
+    <footer class="footer py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>EduConnect Lesotho</h5>
+                    <p class="mb-0">Empowering communities through accessible digital resources and education.</p>
+                    <p class="mb-0">Serving Lesotho and surrounding areas.</p>
+                </div>
+                <div class="col-md-3">
+                    <h6>Quick Links</h6>
+                    <ul class="list-unstyled">
+                        <li><a href="{{ url_for('main.about') }}" class="text-white-50">About Us</a></li>
+                        <li><a href="{{ url_for('main.contact') }}" class="text-white-50">Contact</a></li>
+                        <li><a href="{{ url_for('main.digital_literacy') }}" class="text-white-50">Digital Literacy</a></li>
+                        <li><a href="{{ url_for('main.offline_access') }}" class="text-white-50">Offline Access</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h6>Support</h6>
+                    <p class="mb-1"><i class="fas fa-phone"></i> +266 68776186</p>
+                    <p class="mb-1"><i class="fas fa-envelope"></i> <a href="mailto:info@educonnect-lesotho.ls" style="color: #fff; text-decoration: underline;">info@educonnect.org.ls</a></p>
+                    <p class="mb-0"><i class="fas fa-map-marker-alt"></i> Butha-Buthe, Lesotho</p>
+                </div>
+            </div>
+            <hr class="my-3">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <p class="mb-0">&copy; 2025 EduConnect Lesotho. All rights reserved.</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <small>Optimized for low-bandwidth environments</small>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- Bootstrap JavaScript Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JavaScript -->
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <!-- User login status for JavaScript -->
+    <script>
+        document.body.dataset.userLoggedIn = "{% if current_user.is_authenticated %}true{% else %}false{% endif %}";
+    </script>
+    <!-- Floating Back to Top Button -->
+    <a href="#" id="backToTopBtn" class="btn btn-primary btn-lg position-fixed" style="bottom:32px; right:32px; z-index:99999; border-radius:50%; display:none;" title="Back to Top">
+        <i class="fas fa-arrow-up"></i>
+    </a>
+    <script>
+    // Show/hide Back to Top button
+    window.addEventListener('scroll', function() {
+        const btn = document.getElementById('backToTopBtn');
+        if (window.scrollY > 200) {
+            btn.style.display = 'block';
+        } else {
+            btn.style.display = 'none';
+        }
+    });
+    // Scroll to top on click
+    document.getElementById('backToTopBtn').addEventListener('click', function(e) {
+        e.preventDefault();
+        window.scrollTo({top: 0, behavior: 'smooth'});
+    });
+    </script>
+    <style>
+    #backToTopBtn {
+        box-shadow: 0 4px 16px rgba(25, 135, 84, 0.2);
+        z-index: 99999 !important;
+        position: fixed;
+        bottom: 32px;
+        right: 32px;
+        border-radius: 50%;
+    }
+    #backToTopBtn:hover {
+        background: var(--accent-color);
+        color: #fff;
+    }
+    </style>
+    {% block extra_js %}{% endblock %}
+    <!-- ...existing code... -->
+    {% if not current_user.is_authenticated %}
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Only allow home, login, register
+        const allowed = [
+            "{{ url_for('main.index') }}",
+            "{{ url_for('auth.login') }}",
+            "{{ url_for('auth.register') }}"
+        ];
+        document.querySelectorAll('a').forEach(function(link) {
+            const href = link.getAttribute('href');
+            if (href && !allowed.includes(href)) {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    window.location.href = "{{ url_for('auth.login') }}";
+                });
+                link.classList.add('disabled');
+                link.setAttribute('aria-disabled', 'true');
+                link.style.pointerEvents = 'auto';
+            }
+        });
+    });
+    </script>
+    {% endif %}
+</body>
+</html>

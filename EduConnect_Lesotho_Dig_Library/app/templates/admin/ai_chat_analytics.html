@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+{% block title %}AI Chat Analytics - {{ library_name }}{% endblock %}
+{% block content %}
+<div class="container mt-5">
+        <!-- AI Chat Analytics page removed -->
+    <div id="analytics-table" class="table-responsive"></div>
+    <canvas id="analyticsChart" height="120"></canvas>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+fetch('/admin/ai_chat_analytics')
+    .then(res => res.json())
+    .then(data => {
+        const analytics = data.analytics;
+        // Table
+        let table = '<table class="table table-striped"><thead><tr><th>Time</th><th>User</th><th>Query</th><th>Answer</th><th>Actions</th></tr></thead><tbody>';
+        analytics.forEach(row => {
+            table += `<tr><td>${row.timestamp}</td><td>${row.user}</td><td>${row.query}</td><td>${row.answer}</td><td>${row.actions}</td></tr>`;
+        });
+        table += '</tbody></table>';
+        document.getElementById('analytics-table').innerHTML = table;
+        // Chart: queries per day
+        const dates = analytics.map(a => a.timestamp);
+        const dateCounts = dates.reduce((acc, d) => { acc[d] = (acc[d]||0)+1; return acc; }, {});
+        const chart = new Chart(document.getElementById('analyticsChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: Object.keys(dateCounts),
+                datasets: [{ label: 'Queries per day', data: Object.values(dateCounts), backgroundColor: '#4CAF50' }]
+            },
+            options: { scales: { x: { title: { display: true, text: 'Date' } }, y: { title: { display: true, text: 'Queries' }, beginAtZero: true } } }
+        });
+    });
+</script>
+{% endblock %}

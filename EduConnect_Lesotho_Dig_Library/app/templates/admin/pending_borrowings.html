@@ -1,0 +1,39 @@
+{% extends 'admin/dashboard.html' %}
+{% block content %}
+<div class="container mt-4">
+    <h2>Pending Borrow Requests</h2>
+    {% if borrowings and borrowings|length > 0 %}
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Book</th>
+                <th>Requested On</th>
+                <th>Due Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for b in borrowings %}
+            <tr>
+                <td>{{ b.user_id }}</td>
+                <td>{{ b.book_id }}</td>
+                <td>{{ b.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                <td>{{ b.due_date.strftime('%Y-%m-%d') }}</td>
+                <td>
+                    <form method="POST" action="{{ url_for('admin.approve_borrowing', borrowing_id=b.id) }}" style="display:inline;">
+                        <button type="submit" class="btn btn-success btn-sm">Approve</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('admin.reject_borrowing', borrowing_id=b.id) }}" style="display:inline;">
+                        <button type="submit" class="btn btn-danger btn-sm">Reject</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No pending borrow requests.</p>
+    {% endif %}
+</div>
+{% endblock %}

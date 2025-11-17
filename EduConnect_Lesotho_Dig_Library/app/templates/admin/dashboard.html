@@ -1,0 +1,448 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - {{ library_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Page Header -->
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h1 class="display-6 mb-2">
+                            <i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard
+                        </h1>
+                        <p class="text-muted">Manage your digital library system</p>
+                    </div>
+                    <div>
+                        <span class="badge bg-success fs-6">
+                            <i class="fas fa-user-shield me-1"></i>Administrator
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card bg-primary text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h3 class="card-title">{{ total_books }}</h3>
+                            <p class="card-text">Total Books</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-book fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('admin.manage_books') }}" class="text-white text-decoration-none">
+                        <small><i class="fas fa-arrow-right me-1"></i>Manage Books</small>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h3 class="card-title">{{ total_users }}</h3>
+                            <p class="card-text">Registered Users</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('admin.manage_users') }}" class="text-white text-decoration-none">
+                        <small><i class="fas fa-arrow-right me-1"></i>Manage Users</small>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card bg-warning text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h3 class="card-title">{{ active_borrowings }}</h3>
+                            <p class="card-text">Active Borrowings</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-hand-holding fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('admin.manage_borrowings') }}" class="text-white text-decoration-none">
+                        <small><i class="fas fa-arrow-right me-1"></i>Manage Borrowings</small>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card bg-danger text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h3 class="card-title">{{ overdue_books }}</h3>
+                            <p class="card-text">Overdue Books</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-exclamation-triangle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('admin.manage_borrowings') }}?filter=overdue" class="text-white text-decoration-none">
+                        <small><i class="fas fa-arrow-right me-1"></i>View Overdue</small>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions & Recent Activity -->
+    <div class="row mb-4">
+        <!-- Quick Actions -->
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('admin.add_book') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Add New Book
+                        </a>
+                        <a href="{{ url_for('admin.manage_borrowings') }}" class="btn btn-warning">
+                            <i class="fas fa-hand-holding me-2"></i>Process Returns
+                        </a>
+                        <a href="{{ url_for('admin.manage_users') }}" class="btn btn-success">
+                            <i class="fas fa-user-plus me-2"></i>Manage Users
+                        </a>
+                        <a href="{{ url_for('admin.reports') }}" class="btn btn-info">
+                            <i class="fas fa-chart-bar me-2"></i>View Reports
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="col-lg-8 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Recent Activity</h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_activity %}
+                        <div class="list-group list-group-flush">
+                            {% for activity in recent_activity %}
+                            <div class="list-group-item border-0 px-0">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">{{ activity.description }}</h6>
+                                        <p class="mb-1 text-muted small">{{ activity.details }}</p>
+                                        <small class="text-muted">{{ activity.timestamp.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                                    </div>
+                                    <span class="badge bg-{{ activity.type_class }} rounded-pill">{{ activity.type }}</span>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No recent activity</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Row -->
+    <div class="row mb-4">
+        <!-- Book Categories Chart -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Books by Category</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="categoriesChart" width="400" height="200"></canvas>
+                    <div id="categoriesSummary" class="mt-3 text-center">
+                        <strong>Total Categories:</strong> {{ category_labels|length }}<br>
+                        <strong>Total Books:</strong> {{ category_data|sum }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monthly Borrowings Chart -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Monthly Borrowings</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="borrowingsChart" width="400" height="200"></canvas>
+                    <div id="borrowingsSummary" class="mt-3 text-center">
+                        <strong>Total Borrowings This Year:</strong> {{ monthly_borrowings|sum }}<br>
+                        <strong>Peak Month:</strong> {{ peak_month }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Information -->
+    <div class="row">
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>System Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-sm-6 mb-2">
+                            <strong>Library Version:</strong>
+                        </div>
+                        <div class="col-sm-6 mb-2">
+                            1.0.0
+                        </div>
+                        <div class="col-sm-6 mb-2">
+                            <strong>Database Size:</strong>
+                        </div>
+                        <div class="col-sm-6 mb-2">
+                            {{ database_size if database_size else 'Unknown' }}
+                        </div>
+                        <div class="col-sm-6 mb-2">
+                            <strong>Last Backup:</strong>
+                        </div>
+                        <div class="col-sm-6 mb-2">
+                            {{ last_backup.strftime('%B %d, %Y') if last_backup else 'Never' }}
+                        </div>
+                        <div class="col-sm-6 mb-2">
+                            <strong>System Status:</strong>
+                        </div>
+                        <div class="col-sm-6 mb-2">
+                            <span class="badge bg-success">Operational</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>System Alerts</h5>
+                </div>
+                <div class="card-body">
+                    {% if system_alerts %}
+                        {% for alert in system_alerts %}
+                        <div class="alert alert-{{ alert.level }} alert-dismissible fade show" role="alert">
+                            <strong>{{ alert.title }}</strong> {{ alert.message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-check-circle fa-2x text-success mb-2"></i>
+                            <p class="text-muted mb-0">No system alerts</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.card:hover {
+    transform: translateY(-2px);
+    transition: transform 0.2s ease-in-out;
+}
+
+.card-footer {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.list-group-item:last-child {
+    border-bottom: none;
+}
+
+.badge {
+    font-size: 0.7rem;
+}
+
+@media (max-width: 768px) {
+    .card-title {
+        font-size: 1.5rem;
+    }
+    
+    .fa-2x {
+        font-size: 1.5em;
+    }
+}
+</style>
+{% endblock %}
+
+{% set category_labels_json = category_labels | tojson %}
+{% set category_data_json = category_data | tojson %}
+{% set monthly_labels_json = monthly_labels | tojson %}
+{% set monthly_borrowings_json = monthly_borrowings | tojson %}
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+// Categories Chart
+const categoriesCtx = document.getElementById('categoriesChart').getContext('2d');
+const categoriesChart = new Chart(categoriesCtx, {
+    type: 'doughnut',
+    data: {
+        labels: JSON.parse('{{ category_labels_json | tojson | safe }}'),
+        datasets: [{
+            data: JSON.parse('{{ category_data_json | tojson | safe }}'),
+            backgroundColor: [
+                '#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1',
+                '#fd7e14', '#20c997', '#6c757d', '#e83e8c', '#17a2b8',
+                '#f97316', '#6366f1', '#84cc16', '#e11d48', '#0ea5e9', '#a855f7'
+            ],
+            borderWidth: 2,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'bottom',
+                labels: {
+                    font: { size: 14 }
+                }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        let label = context.label || '';
+                        let value = context.parsed || 0;
+                        return `${label}: ${value} books`;
+                    }
+                }
+            },
+            datalabels: {
+                color: '#fff',
+                font: { weight: 'bold', size: 16 },
+                formatter: function(value, ctx) {
+                    return value > 0 ? value : '';
+                }
+            }
+        },
+        onClick: function(evt, elements) {
+            if (elements.length > 0) {
+                const idx = elements[0].index;
+                const category = categoriesChart.data.labels[idx];
+                window.location.href = `/admin/manage_books?category=${encodeURIComponent(category)}`;
+            }
+        }
+    },
+    plugins: [window.ChartDataLabels]
+});
+
+// Monthly Borrowings Chart
+const borrowingsCtx = document.getElementById('borrowingsChart').getContext('2d');
+const borrowingsChart = new Chart(borrowingsCtx, {
+    type: 'line',
+    data: {
+        labels: JSON.parse('{{ monthly_labels_json | tojson | safe }}'),
+        datasets: [{
+            label: 'Borrowings',
+            data: JSON.parse('{{ monthly_borrowings_json | tojson | safe }}'),
+            borderColor: '#007bff',
+            backgroundColor: 'rgba(0, 123, 255, 0.2)',
+            pointBackgroundColor: '#dc3545',
+            pointRadius: 6,
+            pointHoverRadius: 10,
+            tension: 0.4,
+            fill: true,
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'top',
+                labels: { font: { size: 14 } }
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        return `${context.label}: ${context.parsed.y} borrowings`;
+                    }
+                }
+            },
+            datalabels: {
+                align: 'top',
+                anchor: 'end',
+                color: '#007bff',
+                font: { weight: 'bold', size: 14 },
+                formatter: function(value, ctx) {
+                    return value > 0 ? value : '';
+                }
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: { stepSize: 1 }
+            }
+        },
+        onClick: function(evt, elements) {
+            if (elements.length > 0) {
+                const idx = elements[0].index;
+                const month = borrowingsChart.data.labels[idx];
+                alert(`Month: ${month}, Borrowings: ${borrowingsChart.data.datasets[0].data[idx]}`);
+            }
+        }
+    },
+    plugins: [window.ChartDataLabels]
+});
+
+// Real-time clock
+function updateClock() {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString();
+    const dateString = now.toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+    
+    // Update if clock element exists
+    const clockElement = document.getElementById('dashboard-clock');
+    if (clockElement) {
+        clockElement.innerHTML = `${timeString}<br><small>${dateString}</small>`;
+    }
+}
+
+// Update clock every second
+setInterval(updateClock, 1000);
+updateClock();
+</script>
+{% endblock %}

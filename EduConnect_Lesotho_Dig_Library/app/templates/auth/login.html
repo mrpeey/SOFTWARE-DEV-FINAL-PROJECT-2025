@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}Login - {{ library_name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card shadow">
+            <div class="card-header text-center bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Login to {{ library_name }}
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <!-- CSRF Token -->
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    
+                    <div class="mb-3">
+                        <label for="username_or_email" class="form-label">
+                            <i class="fas fa-user"></i>
+                            Username or Email
+                        </label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="username_or_email" 
+                               name="username_or_email"
+                               placeholder="Enter your username or email"
+                               required
+                               autocomplete="username">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">
+                            <i class="fas fa-lock"></i>
+                            Password
+                        </label>
+                        <input type="password" 
+                               class="form-control" 
+                               id="password" 
+                               name="password"
+                               placeholder="Enter your password"
+                               required
+                               autocomplete="current-password">
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" 
+                               class="form-check-input" 
+                               id="remember_me" 
+                               name="remember_me">
+                        <label class="form-check-label" for="remember_me">
+                            Remember me
+                        </label>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-sign-in-alt"></i>
+                            Login
+                        </button>
+                    </div>
+                </form>
+                
+                <hr class="my-4">
+                
+                <div class="text-center">
+                    <p class="mb-2">Don't have an account?</p>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-user-plus"></i>
+                        Create Account
+                    </a>
+                </div>
+                
+                <div class="text-center mt-3">
+                    <a href="{{ url_for('auth.forgot_password') }}" class="text-muted text-decoration-none">
+                        <i class="fas fa-key me-1"></i>
+                        Forgot your password?
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Access for Guests -->
+        <div class="card mt-4">
+            <div class="card-body text-center">
+                <h6 class="card-title">Quick Access</h6>
+                <p class="card-text small text-muted">
+                    Browse our collection without creating an account
+                </p>
+                <a href="{{ url_for('main.index') }}#recent-additions" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-search"></i>
+                    Browse Books
+                </a>
+                <a href="{{ url_for('main.index') }}#categories" class="btn btn-outline-secondary btn-sm">
+                    <i class="fas fa-tags"></i>
+                    Categories
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card {
+        border: none;
+        border-radius: 15px;
+    }
+    
+    .card-header {
+        border-radius: 15px 15px 0 0 !important;
+    }
+    
+    .form-control:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.2rem rgba(46, 125, 50, 0.25);
+    }
+    
+    .btn-primary {
+        border-radius: 10px;
+    }
+    
+    @media (max-width: 576px) {
+        .card {
+            margin: 0 10px;
+        }
+    }
+</style>
+{% endblock %}

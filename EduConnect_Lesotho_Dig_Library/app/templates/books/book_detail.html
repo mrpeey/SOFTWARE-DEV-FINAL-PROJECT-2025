@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Book Details - {{ book.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-4">
+            {% if book.cover_image %}
+                {% if book.cover_image.endswith('.svg') and svg_content %}
+                    <div class="img-fluid rounded shadow-sm mb-3">{{ svg_content|safe }}</div>
+                {% else %}
+                    <img src="{{ url_for('static', filename=book.cover_image) }}" alt="{{ book.title }}" class="img-fluid rounded shadow-sm mb-3">
+                {% endif %}
+            {% else %}
+                {% include 'shared/book_cover_svg.html' with context %}
+            {% endif %}
+        </div>
+        <div class="col-md-8">
+            <h2>{{ book.title }}</h2>
+            <p class="text-muted">by {{ book.author }}</p>
+            <p><strong>Category:</strong> {{ book.category.name if book.category else 'Uncategorized' }}</p>
+            <p><strong>Published:</strong> {{ book.published_date if book.published_date else 'Unknown' }}</p>
+            <p><strong>Description:</strong></p>
+            <p>{{ book.description if book.description else 'No description available.' }}</p>
+            <hr>
+            <a href="{{ url_for('main.reader', book_id=book.id) }}" class="btn btn-primary me-2">
+                <i class="fas fa-book-open me-1"></i>Read Book
+            </a>
+            <a href="{{ url_for('main.borrow_book', book_id=book.id) }}" class="btn btn-success me-2">
+                <i class="fas fa-hand-holding me-1"></i>Borrow Book
+            </a>
+            <a href="{{ url_for('main.add_review', book_id=book.id) }}" class="btn btn-warning">
+                <i class="fas fa-star me-1"></i>Review Book
+            </a>
+                <button type="button" class="btn btn-info" id="shareBtn">
+                    <i class="fas fa-share-alt me-1"></i>Share
+                </button>
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div class="col-12">
+            <h4>Reviews</h4>
+<!-- Share Modal -->
+<div class="modal fade" id="shareModal" tabindex="-1" aria-labelledby="shareModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="shareModalLabel">Share this Book</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Share this book using:</p>
+                <div class="d-flex flex-column gap-2">
+                    <a id="shareEmail" class="btn btn-outline-primary" target="_blank"><i class="fas fa-envelope me-1"></i>Email</a>
+                    <a id="shareWhatsApp" class="btn btn-outline-success" target="_blank"><i class="fab fa-whatsapp me-1"></i>WhatsApp</a>
+                    <a id="shareFacebook" class="btn btn-outline-info" target="_blank"><i class="fab fa-facebook me-1"></i>Facebook</a>
+                    <a id="shareCopy" class="btn btn-outline-secondary"><i class="fas fa-link me-1"></i>Copy Link</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+            {% if book.reviews %}
+                <ul class="list-group">
+                    {% for review in book.reviews %}
+                    <li class="list-group-item d-flex align-items-start py-3">
+                        <div class="me-3">
+                            {% if review.user and review.user.profile_image %}
+                                <img src="{{ url_for('static', filename=review.user.profile_image) }}" class="rounded-circle border shadow" width="48" height="48" alt="Reviewer">
+                            {% else %}
+                                <!-- Inline SVG for No Image -->
+                                <svg width="48" height="48" viewBox="0 0 48 48" class="rounded-circle border shadow" xmlns="http://www.w3.org/2000/svg">
+                                    <rect width="48" height="48" rx="24" fill="#e5e7eb"/>
+                                    <text x="24" y="28" text-anchor="middle" fill="#888" font-size="12" font-family="Arial" font-weight="bold">No Image</text>
+                                </svg>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>{{ review.user_name if review.user_name else (review.user.get_full_name() if review.user else 'Anonymous') }}</strong>
+                                    <span class="text-muted ms-2">{{ review.created_at.strftime('%B %d, %Y') }}</span>
+                                </div>
+                                <span class="badge bg-info">Rating: {{ review.rating }}/5</span>
+                            </div>
+                            <p class="mt-2 mb-1">{{ review.content }}</p>
+                            {% if current_user.is_authenticated and review.user and review.user.id == current_user.id %}
+                                <div class="mt-1">
+                                    <a href="{{ url_for('main.edit_review', book_id=book.id, review_id=review.id) }}" class="btn btn-sm btn-outline-primary me-2">Edit</a>
+                                    <form action="{{ url_for('main.delete_review', book_id=book.id, review_id=review.id) }}" method="post" style="display:inline;">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to delete your review?');">Delete</button>
+                                    </form>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p class="text-muted">No reviews yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

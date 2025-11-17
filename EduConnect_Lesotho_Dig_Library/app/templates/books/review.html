@@ -1,0 +1,275 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if existing_review %}Edit Review{% else %}Write Review{% endif %} - {{ book.title }} - {{ library_name }}
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.index') }}">Home</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.book_detail', book_id=book.id) }}">{{ book.title }}</a></li>
+                    <li class="breadcrumb-item active">
+                        {% if existing_review %}Edit Review{% else %}Write Review{% endif %}
+                    </li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Book Information -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-2">
+                            {% set cat_color = book.category_color if book.category_color is defined else '#6c63ff' %}
+                            {% if book.cover_image and book.cover_image|length > 0 %}
+                                {% set cover_path = book.cover_image if book.cover_image.startswith('uploads/covers/') else 'uploads/covers/' ~ book.cover_image %}
+                                <img src="{{ url_for('static', filename=cover_path) }}"
+                                     class="img-fluid rounded shadow-sm" alt="{{ book.title }}"
+                                     style="width: 100%; max-width: 120px; height: auto; max-height: 180px; object-fit: cover;">
+                            {% else %}
+                                <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 100%; max-width: 120px; height: auto; max-height: 180px;">
+                                    {% include 'shared/book_cover_svg.html' with context %}
+                                </div>
+                            {% endif %}
+
+    <!-- Review Form -->
+    <div class="row mb-5">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-star me-2"></i>
+                        {% if existing_review %}Edit Your Review{% else %}Write a Review{% endif %}
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" id="review-form">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        
+                        <!-- Rating -->
+                        <div class="mb-4">
+                            <label class="form-label"><strong>Your Rating *</strong></label>
+                            <div class="rating-input">
+                                {% for i in range(5, 0, -1) %}
+                                    <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}" 
+                                           {% if existing_review and existing_review.rating == i %}checked{% endif %} required>
+                                    <label for="star{{ i }}" class="star-label">
+                                        <i class="fas fa-star"></i>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                            <small class="form-text text-muted">Click on the stars to rate this book</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="title" class="form-label"><strong>Review Title</strong></label>
+                            <input type="text" class="form-control" id="title" name="title" 
+                                   value="{{ existing_review.title if existing_review else '' }}"
+                                   placeholder="Give your review a title" maxlength="100">
+                            <small class="form-text text-muted">Optional - help others understand your perspective</small>
+                        </div>
+
+                        <!-- Review Content -->
+                        <div class="mb-3">
+
+                            <label for="content" class="form-label"><strong>Your Review *</strong></label>
+                            <textarea class="form-control" id="content" name="content" rows="6" 
+                                      placeholder="Share your thoughts about this book. What did you like or dislike? Would you recommend it to others?" 
+                                      required>{{ existing_review.content if existing_review else '' }}</textarea>
+                            <small class="form-text text-muted">
+                                <span id="char-count">0</span>/1000 characters
+                            </small>
+                        </div>
+
+                        <!-- Reading Status -->
+                        <div class="mb-3">
+                            <label for="reading_status" class="form-label"><strong>Reading Status</strong></label>
+                            <select class="form-select" id="reading_status" name="reading_status">
+                                <option value="completed" {% if existing_review and existing_review.reading_status == 'completed' %}selected{% endif %}>
+                                    Finished reading
+                                </option>
+                                <option value="in_progress" {% if existing_review and existing_review.reading_status == 'in_progress' %}selected{% endif %}>
+                                    Currently reading
+                                </option>
+                                <option value="abandoned" {% if existing_review and existing_review.reading_status == 'abandoned' %}selected{% endif %}>
+                                    Did not finish
+                                </option>
+                            </select>
+                        </div>
+
+                        <!-- Tags -->
+                        <div class="mb-4">
+                            <label for="tags" class="form-label"><strong>Tags</strong></label>
+                            <input type="text" class="form-control" id="tags" name="tags" 
+                                   value="{{ existing_review.tags if existing_review else '' }}"
+                                   placeholder="e.g., exciting, educational, slow-paced">
+                            <small class="form-text text-muted">
+                                Separate tags with commas. Help others find reviews by topic.
+                            </small>
+                        </div>
+
+                        <!-- Anonymous Option -->
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="is_anonymous" name="is_anonymous"
+                                       {% if existing_review and existing_review.is_anonymous %}checked{% endif %}>
+                                <label class="form-check-label" for="is_anonymous">
+                                    Post this review anonymously
+                                </label>
+                                <small class="form-text text-muted d-block">
+                                    Your name will not be shown with this review
+                                </small>
+                            </div>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('main.book_detail', book_id=book.id) }}" 
+                               class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Cancel
+                            </a>
+                            <div>
+                                {% if existing_review %}
+                                    <button type="button" class="btn btn-outline-danger me-2" onclick="deleteReview()">
+                                        <i class="fas fa-trash me-1"></i>Delete Review
+                                    </button>
+                                {% endif %}
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-1"></i>
+                                    {% if existing_review %}Update Review{% else %}Post Review{% endif %}
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Guidelines -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card border-info">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i>Review Guidelines</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0">
+                        <li>Be honest and constructive in your feedback</li>
+                        <li>Focus on the book's content, writing style, and your reading experience</li>
+                        <li>Avoid spoilers - let others discover the story for themselves</li>
+                        <li>Be respectful of different opinions and perspectives</li>
+                        <li>Keep your review relevant to the book being reviewed</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+{% if existing_review %}
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete Review</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete your review for "<strong>{{ book.title }}</strong>"?</p>
+                <p class="text-danger"><small>This action cannot be undone.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="{{ url_for('books.delete_review', book_id=book.id) }}" class="d-inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash me-1"></i>Delete Review
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.rating-input {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-end;
+    gap: 5px;
+}
+
+.rating-input input[type="radio"] {
+    display: none;
+}
+
+.star-label {
+    cursor: pointer;
+    font-size: 1.5rem;
+    color: #ddd;
+    transition: color 0.2s;
+}
+
+.star-label:hover,
+.star-label:hover ~ .star-label,
+.rating-input input[type="radio"]:checked ~ .star-label {
+    color: #ffc107;
+}
+
+.rating-input input[type="radio"]:checked ~ .star-label {
+    color: #ffc107;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    transition: transform 0.2s ease-in-out;
+}
+
+.stars i {
+    font-size: 1rem;
+}
+
+#content {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.form-check-label {
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .rating-input {
+        justify-content: center;
+    }
+    
+    .star-label {
+        font-size: 1.25rem;
+    }
+}
+</style>
+{% endblock %}
+
+document.querySelectorAll('input[name="rating"]').forEach(radio => {
+    radio.addEventListener('change', autoSaveDraft);
+});
+
+// Clear draft on successful submission
+document.getElementById('review-form').addEventListener('submit', function() {
+    localStorage.removeItem('reviewDraft_{{ book.id }}');
+});
+</script>
+{% endblock %}

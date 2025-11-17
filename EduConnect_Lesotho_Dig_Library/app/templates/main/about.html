@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}About {{ library_name }}{% endblock %}
+
+{% block content %}
+<!-- Floating AI Chat Button -->
+<!-- Back to Top Button -->
+<a href="#" id="backToTopBtn" class="btn btn-primary btn-lg position-fixed" style="bottom:32px; right:32px; z-index:9999; border-radius:50%; display:none;" title="Back to Top">
+    <i class="fas fa-arrow-up"></i>
+</a>
+<!-- Floating AI Chat Button -->
+<!-- AI Chat button removed -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var btn = document.getElementById('backToTopBtn');
+    window.addEventListener('scroll', function() {
+        btn.style.display = (window.scrollY > 300) ? 'block' : 'none';
+    });
+    btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+});
+</script>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Hero Section -->
+            <div class="text-center mb-5">
+                <h1 class="display-4 mb-3">About {{ library_name }}</h1>
+                <p class="lead">Empowering communities through digital access to knowledge and literature</p>
+            </div>
+
+            <!-- Mission Section -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0"><i class="fas fa-bullseye me-2"></i>Our Mission</h3>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        The EduConnect Lesotho Digital Library is dedicated to providing free and open access to knowledge, 
+                        literature, and educational resources to the community of Lesotho and beyond. 
+                        We believe that education and information should be accessible to everyone, regardless of 
+                        their economic situation or geographic location.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Features Section -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0"><i class="fas fa-star me-2"></i>What We Offer</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-book text-primary fa-2x me-3 mt-1"></i>
+                                <div>
+                                    <h5>Digital Books</h5>
+                                    <p class="text-muted">Access thousands of digital books that you can read online or download for offline reading.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-hand-holding text-primary fa-2x me-3 mt-1"></i>
+                                <div>
+                                    <h5>Physical Books</h5>
+                                    <p class="text-muted">Borrow physical books from our collection and enjoy traditional reading experiences.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-search text-primary fa-2x me-3 mt-1"></i>
+                                <div>
+                                    <h5>Advanced Search</h5>
+                                    <p class="text-muted">Find books quickly using our powerful search functionality with multiple filters.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-users text-primary fa-2x me-3 mt-1"></i>
+                                <div>
+                                    <h5>Community Reviews</h5>
+                                    <p class="text-muted">Read and write reviews to help other community members discover great books.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Digital Literacy Section -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-info text-white">
+                    <h3 class="mb-0"><i class="fas fa-laptop me-2"></i>Digital Literacy</h3>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        Beyond providing access to books, we are committed to improving digital literacy in our community. 
+                        We offer resources and guidance to help users navigate the digital world effectively and safely.
+                    </p>
+                    <a href="{{ url_for('main.digital_literacy') }}" class="btn btn-info">
+                        <i class="fas fa-graduation-cap me-1"></i>Learn More
+                    </a>
+                </div>
+            </div>
+
+            <!-- Contact Section -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h3 class="mb-0"><i class="fas fa-envelope me-2"></i>Get in Touch</h3>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">
+                        Have questions, suggestions, or need help? We're here to assist you. 
+                        Contact us through our contact page or visit us in person.
+                    </p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <a href="{{ url_for('main.contact') }}" class="btn btn-warning w-100 mb-2">
+                                <i class="fas fa-paper-plane me-1"></i>Contact Us
+                            </a>
+                        </div>
+                        <div class="col-md-6">
+                            <a href="{{ url_for('main.index') }}" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-home me-1"></i>Back to Home
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics -->
+            <div class="card shadow mb-4">
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 col-md-3 mb-3">
+                            <div class="h2 text-primary">∞</div>
+                            <small class="text-muted">Knowledge</small>
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <div class="h2 text-success">24/7</div>
+                            <small class="text-muted">Access</small>
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <div class="h2 text-warning">Free</div>
+                            <small class="text-muted">Always</small>
+                        </div>
+                        <div class="col-6 col-md-3 mb-3">
+                            <div class="h2 text-info">Community</div>
+                            <small class="text-muted">Focused</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

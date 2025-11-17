@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Renew Subscription - {{ library_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-sync-alt me-2"></i>Renew Subscription
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-redo-alt fa-3x text-primary mb-3"></i>
+                        <h5>Confirm Subscription Renewal</h5>
+                    </div>
+
+                    <!-- Current Subscription Details -->
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-info-circle me-2"></i>Current Subscription
+                        </h6>
+                        <hr>
+                        <p><strong>Plan:</strong> {{ subscription.plan.name }}</p>
+                        <p><strong>Current End Date:</strong> {{ subscription.end_date.strftime('%B %d, %Y') }}</p>
+                        <p class="mb-0"><strong>Status:</strong> 
+                            <span class="badge bg-{{ 'success' if subscription.is_active and not subscription.is_expired else 'danger' }}">
+                                {{ 'Active' if subscription.is_active and not subscription.is_expired else 'Expired' }}
+                            </span>
+                        </p>
+                    </div>
+
+                    <!-- Renewal Details -->
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h6 class="card-title">
+                                <i class="fas fa-calendar-plus me-2"></i>Renewal Details
+                            </h6>
+                            <hr>
+                            <p><strong>Plan:</strong> {{ subscription.plan.name }}</p>
+                            <p><strong>Duration:</strong> {{ subscription.plan.duration_days }} day(s)</p>
+                            <p><strong>New Start Date:</strong> {{ subscription.end_date.strftime('%B %d, %Y') }}</p>
+                            <p><strong>New End Date:</strong> 
+                                {% set new_end = subscription.end_date + timedelta(days=subscription.plan.duration_days) %}
+                                {{ new_end.strftime('%B %d, %Y') }}
+                            </p>
+                            <hr>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fs-5"><strong>Amount:</strong></span>
+                                <span class="fs-4 fw-bold text-primary">LSL {{ "%.2f"|format(subscription.plan.price) }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Features -->
+                    <div class="mb-4">
+                        <h6><i class="fas fa-check-circle me-2"></i>Plan Features</h6>
+                        {% if subscription.plan.description %}
+                        <p class="text-muted">{{ subscription.plan.description }}</p>
+                        {% endif %}
+                        <ul class="list-unstyled">
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>Access to digital library resources
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>Borrow up to {{ subscription.plan.max_books }} book(s) at a time
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>{{ subscription.plan.duration_days }} days of access
+                            </li>
+                            <li class="mb-2">
+                                <i class="fas fa-check text-success me-2"></i>Offline reading support
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Confirmation Form -->
+                    <form method="POST" action="{{ url_for('subscription.renew_subscription') }}">
+                        {{ csrf_token() }}
+                        
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <small>By confirming, you agree to renew your subscription. You will be redirected to complete the payment.</small>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-check me-2"></i>Confirm Renewal
+                            </button>
+                            <a href="{{ url_for('subscription.index') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Cancel
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

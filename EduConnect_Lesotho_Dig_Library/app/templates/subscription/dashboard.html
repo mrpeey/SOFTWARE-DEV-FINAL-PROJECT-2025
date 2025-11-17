@@ -1,0 +1,337 @@
+{% extends "base.html" %}
+
+{% block title %}My Subscription - {{ library_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="display-6 mb-2">
+                        <i class="fas fa-user-circle me-2"></i>My Subscription
+                    </h1>
+                    <p class="text-muted">Manage your library subscription and billing</p>
+                </div>
+                <div>
+                    <a href="{{ url_for('subscription.plans') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-eye me-2"></i>View Plans
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subscription Status -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>Subscription Status
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if subscription_status.status == 'admin' %}
+                    <div class="alert alert-success">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-crown fa-2x me-3"></i>
+                            <div>
+                    <h5 class="card-title">Subscription Status: <span class="badge bg-{{ 'success' if user_subscription and user_subscription.status == 'active' else ('warning' if user_subscription and user_subscription.status == 'pending' else 'danger') }}">{{ user_subscription.status.title() if user_subscription else 'None' }}</span></h5>
+                    <p class="card-text">Plan: <strong>{{ user_subscription.plan.name }}</strong></p>
+                    <p class="card-text">Valid Until: <strong>{{ user_subscription.end_date.strftime('%B %d, %Y') }}</strong></p>
+                    <p class="card-text">Max Books: <strong>{{ user_subscription.plan.max_books }}</strong></p>
+                    {% if user_subscription.status == 'active' %}
+                    <p class="card-text text-success">You can borrow up to <strong>{{ user_subscription.plan.max_books }}</strong> books.</p>
+                    {% elif user_subscription.status == 'pending' %}
+                    <p class="card-text text-warning">Your subscription is pending approval. Borrowing is restricted.</p>
+                    {% elif user_subscription.status == 'declined' %}
+                    <p class="card-text text-danger">Your subscription was declined. Please contact support.</p>
+                    {% else %}
+                    <p class="card-text text-secondary">No active subscription. Please subscribe to borrow books.</p>
+                    {% endif %}
+                        </div>
+                    </div>
+                    {% elif subscription_status.status == 'active' %}
+                    <div class="alert alert-success">
+                        <div class="row align-items-center">
+                            <div class="col-md-8">
+                                <h5 class="alert-heading mb-2">
+                                    <i class="fas fa-check-circle me-2"></i>Active Subscription
+                                </h5>
+                                <p class="mb-1"><strong>Plan:</strong> {{ subscription_status.plan_name }}</p>
+                                <p class="mb-1"><strong>Books Allowed:</strong> {{ subscription_status.max_books }}</p>
+                                <p class="mb-0"><strong>Valid Until:</strong> {{ user_subscription.end_date.strftime('%B %d, %Y') }}</p>
+                            </div>
+                            <div class="col-md-4 text-center">
+                                <div class="badge bg-success fs-6 p-2">
+                                    {{ subscription_status.days_remaining }} days left
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="d-flex gap-2">
+                            <form method="POST" action="{{ url_for('subscription.renew_subscription') }}" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <button type="submit" class="btn btn-success btn-sm">
+                                    <i class="fas fa-sync-alt me-1"></i>Renew
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ url_for('subscription.cancel_subscription') }}" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                <button type="submit" class="btn btn-outline-danger btn-sm" 
+                                        onclick="return confirm('Cancel subscription? It will remain active until the end date.')">
+                                    <i class="fas fa-times me-1"></i>Cancel Auto-Renew
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    {% elif subscription_status.status == 'expired_with_pending_renewal' %}
+                    <div class="alert alert-info">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-info-circle me-2"></i>Subscription Expired - Renewal Available
+                        </h5>
+                        <p class="mb-2">Your subscription expired on {{ subscription_status.expired_date.strftime('%B %d, %Y') }}</p>
+                        <p class="mb-2">
+                            <strong>Good news:</strong> You have a pending renewal bill for LSL {{ "%.2f"|format(subscription_status.pending_bill_amount) }}.
+                            You can still download digital books while this bill is pending.
+                        </p>
+                        <p class="mb-3">
+                            <strong>Note:</strong> You cannot borrow new physical books until you pay the renewal bill.
+                        </p>
+                        <div class="d-flex gap-2">
+                            <a href="{{ url_for('subscription.billing_history') }}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-credit-card me-1"></i>Pay Renewal Bill
+                            </a>
+                            <a href="{{ url_for('subscription.plans') }}" class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-eye me-1"></i>View Plans
+                            </a>
+                        </div>
+                    </div>
+                    {% elif subscription_status.status == 'expired' %}
+                    <div class="alert alert-warning">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Subscription Expired
+                        </h5>
+                        <p class="mb-2">Your subscription expired on {{ subscription_status.expired_date.strftime('%B %d, %Y') }}</p>
+                        <a href="{{ url_for('subscription.plans') }}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-sync-alt me-1"></i>Renew Subscription
+                        </a>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-danger">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-times-circle me-2"></i>No Active Subscription
+                        </h5>
+                        <p class="mb-2">You need an active subscription to borrow books from the library.</p>
+                        <a href="{{ url_for('subscription.plans') }}" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus me-1"></i>Choose a Plan
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pending Bills -->
+    {% if pending_bills %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Pending Bills
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Description</th>
+                                    <th>Amount</th>
+                                    <th>Due Date</th>
+                                    <th>Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for bill in pending_bills %}
+                                <tr>
+                                    <td>{{ bill.description }}</td>
+                                    <td>LSL {{ "%.2f"|format(bill.amount) }}</td>
+                                    <td>
+                                        {{ bill.due_date.strftime('%B %d, %Y') }}
+                                        {% if bill.is_overdue %}
+                                        <span class="badge bg-danger ms-1">{{ bill.days_overdue }} days overdue</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-warning">{{ bill.status.title() }}</span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('subscription.billing', billing_id=bill.id) }}" 
+                                           class="btn btn-primary btn-sm">
+                                            <i class="fas fa-credit-card me-1"></i>Pay Now
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Recent Billing History -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2"></i>Recent Billing History
+                    </h5>
+                    <a href="{{ url_for('subscription.billing_history') }}" class="btn btn-outline-primary btn-sm">
+                        <i class="fas fa-list me-1"></i>View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if billing_history %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Description</th>
+                                    <th>Amount</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Payment Method</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in billing_history %}
+                                <tr>
+                                    <td>{{ record.created_at.strftime('%m/%d/%Y') }}</td>
+                                    <td>{{ record.description }}</td>
+                                    <td>LSL {{ "%.2f"|format(record.amount) }}</td>
+                                    <td>
+                                        <span class="badge bg-info">{{ record.billing_type.replace('_', ' ').title() }}</span>
+                                    </td>
+                                    <td>
+                                        {% if record.status == 'paid' %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check me-1"></i>Paid
+                                        </span>
+                                        {% elif record.status == 'pending' %}
+                                        <span class="badge bg-warning">
+                                            <i class="fas fa-clock me-1"></i>Pending
+                                        </span>
+                                        {% elif record.status == 'overdue' %}
+                                        <span class="badge bg-danger">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>Overdue
+                                        </span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">{{ record.status.title() }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {{ record.payment_method.replace('_', ' ').title() if record.payment_method else '-' }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No Billing History</h5>
+                        <p class="text-muted">Your billing history will appear here once you make transactions.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-book fa-2x mb-2"></i>
+                    <h5 class="card-title">{{ current_user.get_borrowing_count() }}</h5>
+                    <p class="card-text">Books Borrowed</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-money-bill fa-2x mb-2"></i>
+                    <h5 class="card-title">LSL {{ "%.2f"|format(current_user.get_total_outstanding_amount()) }}</h5>
+                    <p class="card-text">Outstanding Balance</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-calendar fa-2x mb-2"></i>
+                    <h5 class="card-title">{{ user_subscription.days_remaining if user_subscription else 0 }}</h5>
+                    <p class="card-text">Days Remaining</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body text-center">
+                    <i class="fas fa-list fa-2x mb-2"></i>
+                    <h5 class="card-title">{{ pending_bills|length }}</h5>
+                    <p class="card-text">Pending Bills</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-refresh subscription status every 30 seconds
+    setInterval(function() {
+        fetch('/subscription/api/status')
+            .then(response => response.json())
+            .then(data => {
+                // Update status indicator if needed
+                console.log('Subscription status updated:', data);
+            })
+            .catch(error => {
+                console.error('Error fetching subscription status:', error);
+            });
+    }, 30000);
+
+    // Show success message if redirected from payment
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('payment') === 'success') {
+        showAlert('Payment processed successfully!', 'success');
+    }
+});
+
+function showAlert(message, type) {
+    const alertHtml = `
+        <div class="alert alert-${type} alert-dismissible fade show" role="alert">
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    `;
+    document.querySelector('.container').insertAdjacentHTML('afterbegin', alertHtml);
+}
+</script>
+{% endblock %}

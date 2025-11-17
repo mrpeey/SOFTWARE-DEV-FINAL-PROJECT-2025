@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container py-4">
+    <div class="card mb-3">
+        <div class="card-body">
+            <div id="chat-box" style="height:300px;overflow-y:auto;background:#f8f9fa;padding:1rem;border-radius:8px;margin-bottom:1rem;"></div>
+            <form id="chat-form" class="d-flex">
+                <input type="text" id="chat-input" class="form-control me-2" placeholder="Ask a question..." required aria-label="Ask a question">
+                <button type="submit" class="btn btn-primary">Send</button>
+            </form>
+            <div id="chat-loading" style="display:none;" class="mt-2"><span class="spinner-border spinner-border-sm text-primary"></span> <span>Awaiting response...</span></div>
+        </div>
+    </div>
+</div>
+{% endblock %}

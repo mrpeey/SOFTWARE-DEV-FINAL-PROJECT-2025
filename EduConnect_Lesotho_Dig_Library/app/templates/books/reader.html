@@ -1,0 +1,741 @@
+{% extends "base.html" %}
+
+{% block title %}{{ book.title }} - Reader - {{ library_name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Reader Header -->
+    <div class="row bg-light border-bottom sticky-top">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center py-2 px-3">
+                <!-- Book Info -->
+                <div class="d-flex align-items-center">
+                    <a href="{{ url_for('main.book_detail', book_id=book.id) }}" 
+                       class="btn btn-outline-secondary btn-sm me-3">
+                        <i class="fas fa-arrow-left me-1"></i>Back
+                    </a>
+                    <div>
+                        <h6 class="mb-0">{{ book.title }}</h6>
+                        <small class="text-muted">by {{ book.author }}</small>
+                    </div>
+                </div>
+                
+                <!-- Reader Controls -->
+                <div class="d-flex align-items-center">
+                    <!-- Font Size Controls -->
+                    <div class="btn-group me-3" role="group">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="decreaseFontSize()">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="resetFontSize()">
+                            A
+                        </button>
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="increaseFontSize()">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Theme Toggle -->
+                    <button type="button" class="btn btn-outline-secondary btn-sm me-3" onclick="toggleTheme()">
+                        <i class="fas fa-moon" id="theme-icon"></i>
+                    </button>
+                    
+                    <!-- Bookmark Button -->
+                    <button type="button" class="btn btn-outline-primary btn-sm me-3" onclick="toggleBookmark()">
+                        <i class="far fa-bookmark" id="bookmark-icon"></i>
+                    </button>
+                    
+                    <!-- Download for Offline -->
+                    {% if book.is_digital %}
+                    <button type="button" class="btn btn-outline-success btn-sm me-3" onclick="downloadForOffline()">
+                        <i class="fas fa-download me-1"></i>Offline
+                    </button>
+                    {% endif %}
+                    
+                    <!-- More Options -->
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" 
+                                type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#" onclick="showNotes()">
+                                <i class="fas fa-sticky-note me-2"></i>My Notes
+                            </a></li>
+                            <li><a class="dropdown-item" href="#" onclick="showProgress()">
+                                <i class="fas fa-chart-line me-2"></i>Reading Progress
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('books.review_book', book_id=book.id) }}">
+                                <i class="fas fa-star me-2"></i>Write Review
+                            </a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Reading Progress Bar -->
+    <div class="row">
+        <div class="col-12">
+            <div class="progress" style="height: 3px;">
+             <div class="progress-bar bg-primary" role="progressbar"
+                 id="reading-progress"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Reader Content -->
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    var progress = "{{ session.progress_percentage|default(0, true)|int if session.progress_percentage is defined else 0 }}";
+                    var bar = document.getElementById('reading-progress');
+                    if (bar) bar.style.width = progress + '%';
+                });
+            </script>
+    <div class="row">
+        <div class="col-12">
+            <div class="reader-container" id="reader-container">
+                {% if book.is_digital and book.file_path %}
+                    <!-- Digital Book Content -->
+                    <div class="reader-content" id="reader-content">
+                        {% if book.file_path %}
+                            <!-- Paginated Book Content -->
+                            <div class="book-page p-5" id="page-1" style="display: block;">
+                                <h2 class="text-center mb-4">{{ book.title }}</h2>
+                                <p class="text-center text-muted mb-5">by {{ book.author }}</p>
+                                
+                                <div class="book-text" style="max-width: 800px; margin: 0 auto; line-height: 1.8; font-size: 1.1rem;">
+                                    <h3 class="mb-4">Chapter 1: Introduction</h3>
+                                    
+                                    <p class="text-justify">
+                                        {{ book.description if book.description else "Welcome to this fascinating journey through the pages of " + book.title + "." }}
+                                    </p>
+                                    
+                                    <p class="text-justify mt-3">
+                                        In this comprehensive work, the author {{ book.author }} explores the intricate details 
+                                        and compelling narratives that make this subject matter both engaging and enlightening. 
+                                        Through careful research and thoughtful presentation, readers will discover new perspectives 
+                                        and gain valuable insights into the topics covered within these pages.
+                                    </p>
+                                    
+                                    <p class="text-justify mt-3">
+                                        The journey begins with an exploration of fundamental concepts, building a strong 
+                                        foundation for understanding the more complex ideas that will be introduced in subsequent 
+                                        chapters. Each section has been carefully crafted to guide readers through the material 
+                                        in a logical and accessible manner.
+                                    </p>
+                                    
+                                    <p class="text-justify mt-3">
+                                        As you progress through this book, you'll encounter various examples, illustrations, 
+                                        and practical applications that bring the theoretical concepts to life. The author's 
+                                        expertise shines through in every paragraph, offering readers both knowledge and 
+                                        inspiration.
+                                    </p>
+                                    
+                                    <div class="text-end mt-5 text-muted">
+                                        <small>Page 1 of 3 (Preview)</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="book-page p-5" id="page-2" style="display: none;">
+                                <div class="book-text" style="max-width: 800px; margin: 0 auto; line-height: 1.8; font-size: 1.1rem;">
+                                    <h3 class="mb-4">Chapter 1: Introduction (continued)</h3>
+                                    
+                                    <p class="text-justify">
+                                        The foundation laid in the previous sections provides a framework for understanding 
+                                        the broader themes that will emerge throughout this work. Critical thinking and 
+                                        careful analysis are encouraged as you engage with each concept presented.
+                                    </p>
+                                    
+                                    <p class="text-justify mt-3">
+                                        Historical context plays a vital role in comprehending the evolution of ideas 
+                                        within this field. By examining the development of thought over time, readers 
+                                        can appreciate both the continuity and changes that have shaped our current 
+                                        understanding.
+                                    </p>
+                                    
+                                    <p class="text-justify mt-3">
+                                        Modern applications demonstrate the relevance and practical value of these 
+                                        principles in today's world. Whether applied in professional settings, academic 
+                                        research, or personal development, the insights gained from this study offer 
+                                        tangible benefits.
+                                    </p>
+                                    
+                                    <p class="text-justify mt-3">
+                                        The methodology employed throughout this book emphasizes clarity and accessibility. 
+                                        Complex ideas are broken down into manageable components, allowing readers of 
+                                        varying backgrounds to engage meaningfully with the material.
+                                    </p>
+                                    
+                                    <p class="text-justify mt-3">
+                                        Interactive elements and thought-provoking questions encourage active participation 
+                                        in the learning process. This approach transforms passive reading into an engaging 
+                                        intellectual experience.
+                                    </p>
+                                    
+                                    <div class="text-end mt-5 text-muted">
+                                        <small>Page 2 of 3 (Preview)</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="book-page p-5" id="page-3" style="display: none;">
+                                <div class="book-text" style="max-width: 800px; margin: 0 auto; line-height: 1.8; font-size: 1.1rem;">
+                                    <h3 class="mb-4">Chapter 2: Core Concepts</h3>
+                                    
+                                    <p class="text-justify">
+                                        Building upon the foundational knowledge established in the opening chapter, 
+                                        we now delve deeper into the core concepts that define this area of study. 
+                                        These principles serve as the building blocks for more advanced topics that 
+                                        will be explored in later chapters.
+                                    </p>
+                                    
+                                    <p class="text-justify mt-3">
+                                        Understanding these fundamental ideas is crucial for developing a comprehensive 
+                                        grasp of the subject matter. Each concept interconnects with others, creating 
+                                        a web of knowledge that enhances overall comprehension.
+                                    </p>
+                                    
+                                    <p class="text-justify mt-3">
+                                        Practical examples illustrate how these theoretical frameworks translate into 
+                                        real-world applications. By examining case studies and scenarios, readers can 
+                                        see the direct impact and utility of the concepts being discussed.
+                                    </p>
+                                    
+                                    <div class="alert alert-success mt-5 border-0 shadow-sm">
+                                        <div class="d-flex align-items-start">
+                                            <i class="fas fa-lock fa-2x text-warning me-3 mt-1"></i>
+                                            <div>
+                                                <h6 class="alert-heading mb-2">Preview Limit Reached</h6>
+                                                <p class="mb-2 small">
+                                                    You've reached the end of the free preview for <strong>{{ book.title }}</strong>.
+                                                </p>
+                                                <p class="mb-0 small">
+                                                    {% if current_user.is_authenticated %}
+                                                        <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="btn btn-sm btn-primary">
+                                                            <i class="fas fa-book me-1"></i>Borrow Full Book
+                                                        </a>
+                                                    {% else %}
+                                                        <a href="{{ url_for('auth.login') }}" class="btn btn-sm btn-primary">
+                                                            <i class="fas fa-sign-in-alt me-1"></i>Login to Continue Reading
+                                                        </a>
+                                                    {% endif %}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="text-end mt-4 text-muted">
+                                        <small>Page 3 of 3 (Preview)</small>
+                                    </div>
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="text-center py-5">
+                                <i class="fas fa-book-open fa-3x text-muted mb-3"></i>
+                                <h4>Content Not Available</h4>
+                                <p class="text-muted">The book file is not available at this time.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% else %}
+                    <!-- Physical Book - Show Preview or Info -->
+                    <div class="text-center py-5">
+                        <i class="fas fa-book fa-3x text-muted mb-3"></i>
+                        <h4>Physical Book</h4>
+                        <p class="text-muted">This book is available in physical format at the library.</p>
+                        <p class="text-muted">Please visit us to borrow this book.</p>
+                        
+                        {% if book.preview_text %}
+                        <div class="mt-4">
+                            <h5>Preview</h5>
+                            <div class="card">
+                                <div class="card-body text-start">
+                                    {{ book.preview_text | safe }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mt-4">
+                            <a href="{{ url_for('main.contact') }}" class="btn btn-primary">
+                                <i class="fas fa-map-marker-alt me-2"></i>Visit Library
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Navigation Controls -->
+    {% if book.is_digital %}
+    <div class="row">
+        <div class="col-12">
+            <div class="reader-navigation bg-light border-top p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <button class="btn btn-outline-primary" onclick="previousPage()" id="prev-btn">
+                        <i class="fas fa-chevron-left me-1"></i>Previous
+                    </button>
+                    
+                    <div class="d-flex align-items-center">
+                        <span class="me-2">Page</span>
+                        <input type="number" class="form-control form-control-sm" 
+                               style="width: 80px;" id="current-page" value="1" min="1" 
+                               onchange="goToPage(this.value)">
+                        <span class="ms-2">of <span id="total-pages">1</span></span>
+                    </div>
+                    
+                    <button class="btn btn-outline-primary" onclick="nextPage()" id="next-btn">
+                        Next<i class="fas fa-chevron-right ms-1"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Notes Modal -->
+<div class="modal fade" id="notesModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">My Notes</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <textarea class="form-control" rows="5" id="notes-content" 
+                              placeholder="Write your notes here..."></textarea>
+                </div>
+                <div id="saved-notes">
+                    <!-- Saved notes will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="saveNote()">
+                    <i class="fas fa-save me-1"></i>Save Note
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Modal -->
+<div class="modal fade" id="progressModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reading Progress</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <div class="progress-circle">
+                        <span id="progress-percentage">{{ session.progress_percentage if session and session.progress_percentage is defined else 0 }}%</span>
+                    </div>
+                </div>
+                <div class="row text-center">
+                    <div class="col-4">
+                        <h6>Pages Read</h6>
+                        <span class="text-primary" id="pages-read">{{ session.current_page if session and session.current_page is defined else 0 }}</span>
+                    </div>
+                    <div class="col-4">
+                        <h6>Total Pages</h6>
+                        <span class="text-muted" id="total-pages-display">0</span>
+                    </div>
+                    <div class="col-4">
+                        <h6>Time Spent</h6>
+                        <span class="text-success" id="reading-time">0 min</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.reader-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+    min-height: calc(100vh - 200px);
+}
+
+.reader-content {
+    font-family: Georgia, serif;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #333;
+}
+
+.reader-content.dark-theme {
+    background-color: #1a1a1a;
+    color: #e0e0e0;
+}
+
+.reader-content h1, .reader-content h2, .reader-content h3 {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+}
+
+.reader-content p {
+    margin-bottom: 1rem;
+    text-align: justify;
+}
+
+.book-text {
+    margin: 0 auto;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+
+/* Removed stray closing brace and fixed CSS block */
+
+.dark-theme {
+    background-color: #1a1a1a !important;
+    color: #e0e0e0 !important;
+}
+
+.bookmark-highlight {
+    background-color: #fff3cd;
+    border-left: 4px solid #ffc107;
+    padding: 0.5rem;
+    margin: 0.5rem 0;
+}
+
+@media (max-width: 768px) {
+    .reader-container {
+        padding: 1rem;
+    }
+    
+    .reader-content {
+        font-size: 1rem;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let currentPage = Number("{{ session.current_page if session and session.current_page is defined else 1 }}");
+let totalPages = 3; // Preview has 3 pages
+let readingStartTime = Date.now();
+let isBookmarked = false;
+let isDarkTheme = false;
+
+// Initialize reader
+document.addEventListener('DOMContentLoaded', function() {
+    loadReaderPreferences();
+    showPage(currentPage);
+    updateProgress();
+    startReadingTimer();
+    
+    // Set total pages in UI
+    const totalPagesElem = document.getElementById('total-pages');
+    if (totalPagesElem) {
+        totalPagesElem.textContent = totalPages;
+    }
+    
+    // Auto-save progress every 30 seconds
+    setInterval(saveProgress, 30000);
+});
+
+// Page display function
+function showPage(pageNumber) {
+    // Hide all pages
+    document.querySelectorAll('.book-page').forEach(page => {
+        page.style.display = 'none';
+    });
+    
+    // Show current page
+    const page = document.getElementById('page-' + pageNumber);
+    if (page) {
+        page.style.display = 'block';
+    }
+    
+    // Update page input
+    const pageInput = document.getElementById('current-page');
+    if (pageInput) {
+        pageInput.value = pageNumber;
+    }
+    
+    // Update navigation buttons
+    updateNavigationButtons();
+}
+
+function updateNavigationButtons() {
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    
+    if (prevBtn) {
+        prevBtn.disabled = currentPage === 1;
+    }
+    
+    if (nextBtn) {
+        nextBtn.disabled = currentPage === totalPages;
+    }
+}
+
+// Font size controls
+function increaseFontSize() {
+    const content = document.getElementById('reader-content');
+    const currentSize = parseFloat(window.getComputedStyle(content).fontSize);
+    content.style.fontSize = (currentSize + 2) + 'px';
+    saveReaderPreferences();
+}
+
+function decreaseFontSize() {
+    const content = document.getElementById('reader-content');
+    const currentSize = parseFloat(window.getComputedStyle(content).fontSize);
+    if (currentSize > 12) {
+        content.style.fontSize = (currentSize - 2) + 'px';
+        saveReaderPreferences();
+    }
+}
+
+function resetFontSize() {
+    const content = document.getElementById('reader-content');
+    content.style.fontSize = '1.1rem';
+    saveReaderPreferences();
+}
+
+// Theme toggle
+function toggleTheme() {
+    const container = document.getElementById('reader-container');
+    const icon = document.getElementById('theme-icon');
+    
+    isDarkTheme = !isDarkTheme;
+    
+    if (isDarkTheme) {
+        container.classList.add('dark-theme');
+        icon.className = 'fas fa-sun';
+    } else {
+        container.classList.remove('dark-theme');
+        icon.className = 'fas fa-moon';
+    }
+    
+    saveReaderPreferences();
+}
+
+// Bookmark functionality
+function toggleBookmark() {
+    isBookmarked = !isBookmarked;
+    fetch(`/api/books/{{ book.id }}/bookmark`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({
+            page: currentPage,
+            note: 'Bookmarked page'
+        })
+    });
+}
+
+function removeBookmark() {
+    fetch(`/api/books/{{ book.id }}/bookmark`, {
+        method: 'DELETE',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token() }}',
+            }
+    });
+}
+
+// Navigation
+function previousPage() {
+    if (currentPage > 1) {
+        showPage(currentPage - 1);
+        saveProgress();
+    }
+}
+
+function nextPage() {
+    if (currentPage < totalPages) {
+        showPage(currentPage + 1);
+        saveProgress();
+    }
+}
+
+function goToPage(page) {
+    const pageNum = parseInt(page);
+    if (!isNaN(pageNum)) {
+        showPage(pageNum);
+        saveProgress();
+    }
+}
+
+function updatePage() {
+    showPage(currentPage);
+    updateProgress();
+}
+// Removed stray closing brace
+
+function updatePage() {
+    document.getElementById('current-page').value = currentPage;
+    updateProgress();
+    
+    // Update navigation buttons
+    document.getElementById('prev-btn').disabled = currentPage <= 1;
+    document.getElementById('next-btn').disabled = currentPage >= totalPages;
+}
+
+// Progress tracking
+function updateProgress() {
+    const percentage = totalPages > 0 ? Math.round((currentPage / totalPages) * 100) : 0;
+    document.getElementById('reading-progress').style.width = percentage + '%';
+    
+    // Update progress modal
+    document.getElementById('progress-percentage').textContent = percentage + '%';
+    document.getElementById('pages-read').textContent = currentPage;
+    document.getElementById('total-pages-display').textContent = totalPages;
+}
+
+function saveProgress() {
+    fetch(`/api/books/{{ book.id }}/progress`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({
+            current_page: currentPage,
+            total_pages: totalPages,
+            progress_percentage: Math.round((currentPage / totalPages) * 100)
+        })
+    });
+}
+
+// Notes functionality
+function showNotes() {
+    // This function should show notes modal or section
+    // Implementation placeholder
+}
+
+function loadNotes() {
+    fetch(`/api/books/{{ book.id }}/notes`)
+        .then(response => response.json())
+        .then(notes => {
+            const container = document.getElementById('saved-notes');
+            container.innerHTML = notes.map(note => `
+                <div class="card mb-2">
+                    <div class="card-body">
+                        <p class="card-text">${note.content}</p>
+                        <small class="text-muted">Page ${note.page} - ${note.created_at}</small>
+                    </div>
+                </div>
+            `).join('');
+        });
+}
+
+function saveNote() {
+    const content = document.getElementById('notes-content').value;
+    if (!content.trim()) return;
+    
+    fetch(`/api/books/{{ book.id }}/notes`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': '{{ csrf_token() }}'
+        },
+        body: JSON.stringify({
+            content: content,
+            page: currentPage
+        })
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            document.getElementById('notes-content').value = '';
+            loadNotes();
+        }
+    });
+}
+
+// Progress modal
+function showProgress() {
+    const modal = new bootstrap.Modal(document.getElementById('progressModal'));
+    updateReadingTime();
+    modal.show();
+}
+
+// Reading timer
+function startReadingTimer() {
+    setInterval(updateReadingTime, 60000); // Update every minute
+}
+
+function updateReadingTime() {
+    const timeSpent = Math.round((Date.now() - readingStartTime) / 60000); // minutes
+    document.getElementById('reading-time').textContent = timeSpent + ' min';
+}
+
+// Download for offline
+function downloadForOffline() {
+    // Implementation for offline download
+    fetch(`/api/books/{{ book.id }}/download`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token() }}'
+        }
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success && result.book) {
+            // Save book info to localStorage for offline access
+            let downloadedBooks = JSON.parse(localStorage.getItem('downloadedBooks') || '[]');
+            // Avoid duplicates
+            if (!downloadedBooks.some(b => b.id === result.book.id)) {
+                downloadedBooks.push({
+                    id: result.book.id,
+                    title: result.book.title,
+                    author: result.book.author,
+                    file_url: result.book.file_url || result.download_url
+                });
+                localStorage.setItem('downloadedBooks', JSON.stringify(downloadedBooks));
+            }
+            alert('Book downloaded for offline reading!');
+        } else {
+            alert('Download failed. Please try again.');
+        }
+    });
+}
+
+// Save and load reader preferences
+function saveReaderPreferences() {
+    const preferences = {
+        fontSize: document.getElementById('reader-content').style.fontSize,
+        darkTheme: isDarkTheme
+    };
+    localStorage.setItem('readerPreferences', JSON.stringify(preferences));
+}
+
+function loadReaderPreferences() {
+    const saved = localStorage.getItem('readerPreferences');
+    if (saved) {
+        const preferences = JSON.parse(saved);
+        if (preferences.fontSize) {
+            document.getElementById('reader-content').style.fontSize = preferences.fontSize;
+        }
+        if (preferences.darkTheme) {
+            toggleTheme();
+        }
+    }
+}
+
+// Auto-save on page unload
+window.addEventListener('beforeunload', function() {
+    saveProgress();
+});
+</script>
+{% endblock %}

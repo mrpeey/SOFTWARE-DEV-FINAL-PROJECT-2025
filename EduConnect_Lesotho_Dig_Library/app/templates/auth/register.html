@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+
+{% block title %}Register - {{ library_name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-7">
+        <div class="card shadow">
+            <div class="card-header text-center bg-success text-white">
+                <h4 class="mb-0">
+                    <i class="fas fa-user-plus"></i>
+                    Join {{ library_name }}
+                </h4>
+                <p class="mb-0 mt-2 small">Create your free library account</p>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    <!-- CSRF Token -->
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                    <!-- Add enctype for file upload -->
+                <form method="POST" enctype="multipart/form-data">
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="first_name" class="form-label">
+                                <i class="fas fa-user"></i>
+                                First Name *
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="first_name" 
+                                   name="first_name"
+                                   placeholder="Enter your first name"
+                                   required
+                                   autocomplete="given-name">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="last_name" class="form-label">
+                                <i class="fas fa-user"></i>
+                                Last Name *
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="last_name" 
+                                   name="last_name"
+                                   placeholder="Enter your last name"
+                                   required
+                                   autocomplete="family-name">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="username" class="form-label">
+                                <i class="fas fa-at"></i>
+                                Username *
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="username" 
+                                   name="username"
+                                   placeholder="Choose a username"
+                                   required
+                                   autocomplete="username"
+                                   pattern="[a-zA-Z0-9_]{3,20}"
+                                   title="Username must be 3-20 characters, letters, numbers, and underscores only">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="email" class="form-label">
+                                <i class="fas fa-envelope"></i>
+                                Email Address *
+                            </label>
+                            <input type="email" 
+                                   class="form-control" 
+                                   id="email" 
+                                   name="email"
+                                   placeholder="Enter your email"
+                                   required
+                                   autocomplete="email">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="password" class="form-label">
+                                <i class="fas fa-lock"></i>
+                                Password *
+                            </label>
+                            <input type="password" 
+                                   class="form-control" 
+                                   id="password" 
+                                   name="password"
+                                   placeholder="Create a password"
+                                   required
+                                   autocomplete="new-password"
+                                   minlength="8">
+                            <div class="form-text">
+                                Password must be at least 8 characters with letters and numbers
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="confirm_password" class="form-label">
+                                <i class="fas fa-lock"></i>
+                                Confirm Password *
+                            </label>
+                            <input type="password" 
+                                   class="form-control" 
+                                   id="confirm_password" 
+                                   name="confirm_password"
+                                   placeholder="Confirm your password"
+                                   required
+                                   autocomplete="new-password">
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="phone_number" class="form-label">
+                                <i class="fas fa-phone"></i>
+                                Phone Number
+                            </label>
+                            <input type="tel" 
+                                   class="form-control" 
+                                   id="phone_number" 
+                                   name="phone_number"
+                                   placeholder="Your phone number"
+                                   autocomplete="tel">
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="district" class="form-label">
+                                <i class="fas fa-map-marker-alt"></i>
+                                District
+                            </label>
+                            <select class="form-select" id="district" name="district">
+                                <option value="Butha-Buthe" selected>Butha-Buthe</option>
+                                <option value="Leribe">Leribe</option>
+                                <option value="Maseru">Maseru</option>
+                                <option value="Mafeteng">Mafeteng</option>
+                                <option value="Mohale's Hoek">Mohale's Hoek</option>
+                                <option value="Quthing">Quthing</option>
+                                <option value="Qacha's Nek">Qacha's Nek</option>
+                                <option value="Mokhotlong">Mokhotlong</option>
+                                <option value="Thaba-Tseka">Thaba-Tseka</option>
+                                <option value="Berea">Berea</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="address" class="form-label">
+                            <i class="fas fa-home"></i>
+                            Address
+                        </label>
+                        <textarea class="form-control" 
+                                  id="address" 
+                                  name="address"
+                                  rows="2"
+                                  placeholder="Your address (optional)"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="user_type" class="form-label">
+                            <i class="fas fa-user-tag"></i>
+                            Select Your Role *
+                        </label>
+                        <select class="form-select" id="user_type" name="user_type" required>
+                            <option value="" disabled selected>Select your role</option>
+                            <option value="public">Public User (General access)</option>
+                            <option value="student">Student (Educational institution)</option>
+                            <option value="researcher">Researcher (Extended access)</option>
+                            <option value="librarian">Librarian</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                        <div class="form-text">
+                            Please select your role to continue registration
+                        </div>
+                    </div>
+
+                        <div class="mb-3">
+                            <label for="profile_image" class="form-label">
+                                <i class="fas fa-image"></i>
+                                Profile Image (optional)
+                            </label>
+                            <input type="file" class="form-control" id="profile_image" name="profile_image" accept="image/*">
+                            <div class="form-text">Upload a profile photo (JPG, PNG, max 2MB)</div>
+                        </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" 
+                               class="form-check-input" 
+                               id="terms_accepted" 
+                               required>
+                        <label class="form-check-label" for="terms_accepted">
+                            I agree to the library terms and conditions *
+                        </label>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-success btn-lg">
+                            <i class="fas fa-user-plus"></i>
+                            Create Account
+                        </button>
+                    </div>
+                </form>
+                
+                <hr class="my-4">
+                
+                <div class="text-center">
+                    <p class="mb-2">Already have an account?</p>
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-sign-in-alt"></i>
+                        Login Here
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Password confirmation validation
+document.getElementById('confirm_password').addEventListener('input', function() {
+    const password = document.getElementById('password').value;
+    const confirmPassword = this.value;
+    
+    if (password !== confirmPassword) {
+        this.setCustomValidity('Passwords do not match');
+    } else {
+        this.setCustomValidity('');
+    }
+});
+
+// Password strength indicator
+document.getElementById('password').addEventListener('input', function() {
+    const password = this.value;
+    const strength = checkPasswordStrength(password);
+    
+    // You can add visual feedback here
+});
+
+function checkPasswordStrength(password) {
+    let strength = 0;
+    if (password.length >= 8) strength++;
+    if (/[a-z]/.test(password)) strength++;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/[0-9]/.test(password)) strength++;
+    if (/[^A-Za-z0-9]/.test(password)) strength++;
+    
+    return strength;
+}
+</script>
+{% endblock %}

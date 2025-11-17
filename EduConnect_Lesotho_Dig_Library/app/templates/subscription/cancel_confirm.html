@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Cancel Subscription - {{ library_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card shadow">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Cancel Subscription
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-times-circle fa-3x text-danger mb-3"></i>
+                        <h5>Are you sure you want to cancel?</h5>
+                    </div>
+
+                    <!-- Current Subscription Details -->
+                    <div class="alert alert-warning">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-info-circle me-2"></i>Current Subscription
+                        </h6>
+                        <hr>
+                        <p><strong>Plan:</strong> {{ subscription.plan.name }}</p>
+                        <p><strong>End Date:</strong> {{ subscription.end_date.strftime('%B %d, %Y') }}</p>
+                        <p class="mb-0"><strong>Status:</strong> 
+                            <span class="badge bg-{{ 'success' if subscription.is_active and not subscription.is_expired else 'danger' }}">
+                                {{ 'Active' if subscription.is_active and not subscription.is_expired else 'Expired' }}
+                            </span>
+                        </p>
+                    </div>
+
+                    <!-- Cancellation Information -->
+                    <div class="card bg-light mb-4">
+                        <div class="card-body">
+                            <h6 class="card-title">
+                                <i class="fas fa-clipboard-list me-2"></i>What happens when you cancel?
+                            </h6>
+                            <hr>
+                            <ul class="mb-0">
+                                <li class="mb-2">Your subscription will remain <strong>active until {{ subscription.end_date.strftime('%B %d, %Y') }}</strong></li>
+                                <li class="mb-2">You'll continue to have access to all features until the end date</li>
+                                <li class="mb-2">Auto-renewal will be <strong>turned off</strong></li>
+                                <li class="mb-2">You can resubscribe at any time</li>
+                                <li>You will not be charged again unless you renew manually</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Benefits You'll Lose -->
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-star me-2"></i>Benefits You'll Lose After {{ subscription.end_date.strftime('%B %d, %Y') }}
+                        </h6>
+                        <hr>
+                        <ul class="mb-0">
+                            <li>Access to digital library resources</li>
+                            <li>Ability to borrow up to {{ subscription.plan.max_books }} book(s) at a time</li>
+                            <li>Offline reading support</li>
+                            <li>Priority customer support</li>
+                        </ul>
+                    </div>
+
+                    <!-- Confirmation Form -->
+                    <form method="POST" action="{{ url_for('subscription.cancel_subscription') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Warning:</strong> This action will disable auto-renewal. Your subscription will end on {{ subscription.end_date.strftime('%B %d, %Y') }}.
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-danger btn-lg">
+                                <i class="fas fa-times me-2"></i>Yes, Cancel My Subscription
+                            </button>
+                            <a href="{{ url_for('subscription.index') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>No, Keep My Subscription
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Need Help? -->
+            <div class="card mt-3">
+                <div class="card-body text-center">
+                    <h6><i class="fas fa-question-circle me-2"></i>Having issues with your subscription?</h6>
+                    <p class="text-muted mb-2">Contact us before cancelling - we're here to help!</p>
+                    <a href="{{ url_for('main.contact') }}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-envelope me-1"></i>Contact Support
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

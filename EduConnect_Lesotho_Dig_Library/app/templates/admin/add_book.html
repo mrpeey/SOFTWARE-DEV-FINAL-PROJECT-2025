@@ -1,0 +1,482 @@
+{% extends "base.html" %}
+
+{% block title %}Add New Book - Admin - {{ library_name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.dashboard') }}">Admin Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('admin.manage_books') }}">Manage Books</a></li>
+                    <li class="breadcrumb-item active">Add New Book</li>
+                </ol>
+            </nav>
+            <h1 class="display-6 mb-2">
+                <i class="fas fa-plus me-2"></i>Add New Book
+            </h1>
+            <p class="text-muted">Add a new book to your library collection</p>
+        </div>
+    </div>
+
+    <!-- Add Book Form -->
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0"><i class="fas fa-book me-2"></i>Book Information</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data" id="addBookForm">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        
+                        <!-- Basic Information -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary border-bottom pb-2">Basic Information</h5>
+                            </div>
+                            
+                            <div class="col-md-8 mb-3">
+                                <label for="title" class="form-label"><strong>Title *</strong></label>
+                                <input type="text" class="form-control" id="title" name="title" required
+                                       placeholder="Enter book title">
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="isbn" class="form-label"><strong>ISBN</strong></label>
+                                <input type="text" class="form-control" id="isbn" name="isbn"
+                                       placeholder="978-0-123456-78-9">
+                                <div class="form-text">International Standard Book Number</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="author" class="form-label"><strong>Author *</strong></label>
+                                <input type="text" class="form-control" id="author" name="author" required
+                                       placeholder="Author name">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="category_id" class="form-label"><strong>Category *</strong></label>
+                                <select class="form-select" id="category_id" name="category_id" required>
+                                    <option value="">Select a category</option>
+                                    {% for category in categories %}
+                                    <option value="{{ category.id }}">{{ category.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="col-12 mb-3">
+                                <label for="description" class="form-label"><strong>Description</strong></label>
+                                <textarea class="form-control" id="description" name="description" rows="4"
+                                          placeholder="Brief description of the book"></textarea>
+                                <div class="form-text">
+                                    <span id="desc-count">0</span>/500 characters
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Publication Details -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary border-bottom pb-2">Publication Details</h5>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="publisher" class="form-label"><strong>Publisher</strong></label>
+                                <input type="text" class="form-control" id="publisher" name="publisher"
+                                       placeholder="Publisher name">
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <label for="publication_date" class="form-label"><strong>Publication Date</strong></label>
+                                <input type="date" class="form-control" id="publication_date" name="publication_date">
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <label for="pages" class="form-label"><strong>Pages</strong></label>
+                                <input type="number" class="form-control" id="pages" name="pages" min="1"
+                                       placeholder="Number of pages">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="language" class="form-label"><strong>Language</strong></label>
+                                <select class="form-select" id="language" name="language">
+                                    <option value="">Select language</option>
+                                    <option value="English">English</option>
+                                    <option value="Sesotho">Sesotho</option>
+                                    <option value="Afrikaans">Afrikaans</option>
+                                    <option value="French">French</option>
+                                    <option value="Spanish">Spanish</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="edition" class="form-label"><strong>Edition</strong></label>
+                                <input type="text" class="form-control" id="edition" name="edition"
+                                       placeholder="e.g., 1st Edition, Revised">
+                            </div>
+                        </div>
+
+                        <!-- Inventory Details -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary border-bottom pb-2">Inventory Details</h5>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="total_copies" class="form-label"><strong>Total Copies *</strong></label>
+                                <input type="number" class="form-control" id="total_copies" name="total_copies" 
+                                       min="1" value="1" required>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="available_copies" class="form-label"><strong>Available Copies *</strong></label>
+                                <input type="number" class="form-control" id="available_copies" name="available_copies" 
+                                       min="0" value="1" required>
+                            </div>
+                            
+                            <div class="col-md-4 mb-3">
+                                <label for="location" class="form-label"><strong>Shelf Location</strong></label>
+                                <input type="text" class="form-control" id="location" name="location"
+                                       placeholder="e.g., A1-B3, Section 2">
+                            </div>
+                        </div>
+
+                        <!-- Digital Book Options -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary border-bottom pb-2">Digital Options</h5>
+                            </div>
+                            
+                            <div class="col-12 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="is_digital" name="is_digital">
+                                    <label class="form-check-label" for="is_digital">
+                                        <strong>This is a digital book</strong>
+                                    </label>
+                                    <div class="form-text">Check if this book is available in digital format</div>
+                                </div>
+                            </div>
+                            
+                            <div id="digital-options" style="display: none;">
+                                <div class="col-12 mb-3">
+                                    <label for="file_upload" class="form-label"><strong>Upload Book File</strong></label>
+                                    <input type="file" class="form-control" id="file_upload" name="file_upload"
+                                           accept=".pdf,.epub,.txt,.doc,.docx">
+                                    <div class="form-text">Supported formats: PDF, EPUB, TXT, DOC, DOCX (Max: 50MB)</div>
+                                </div>
+                                
+                                <div class="col-12 mb-3">
+                                    <label for="download_url" class="form-label"><strong>Or External Download URL</strong></label>
+                                    <input type="url" class="form-control" id="download_url" name="download_url"
+                                           placeholder="https://example.com/book.pdf">
+                                    <div class="form-text">Alternative to file upload</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cover Image -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary border-bottom pb-2">Cover Image</h5>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="cover_image" class="form-label"><strong>Upload Cover Image</strong></label>
+                                <input type="file" class="form-control" id="cover_image" name="cover_image"
+                                       accept="image/*">
+                                <div class="form-text">Recommended: 300x400px, JPG/PNG format</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <div id="cover-preview" class="border rounded p-3 text-center bg-light" style="height: 200px;">
+                                    <i class="fas fa-image fa-3x text-muted mb-2"></i>
+                                    <p class="text-muted mb-0">Cover preview will appear here</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Information -->
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <h5 class="text-primary border-bottom pb-2">Additional Information</h5>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="tags" class="form-label"><strong>Tags</strong></label>
+                                <input type="text" class="form-control" id="tags" name="tags"
+                                       placeholder="education, fiction, history (comma-separated)">
+                                <div class="form-text">Separate tags with commas</div>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="reading_level" class="form-label"><strong>Reading Level</strong></label>
+                                <select class="form-select" id="reading_level" name="reading_level">
+                                    <option value="">Select reading level</option>
+                                    <option value="Beginner">Beginner</option>
+                                    <option value="Intermediate">Intermediate</option>
+                                    <option value="Advanced">Advanced</option>
+                                    <option value="Academic">Academic</option>
+                                    <option value="Children">Children</option>
+                                    <option value="Young Adult">Young Adult</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-12 mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured">
+                                    <label class="form-check-label" for="is_featured">
+                                        <strong><i class="fas fa-star me-1 text-warning"></i>Feature this book on homepage</strong>
+                                        <small class="text-muted d-block">Featured books appear in the top section of the homepage</small>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Actions -->
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="d-flex justify-content-between">
+                                    <a href="{{ url_for('admin.manage_books') }}" class="btn btn-outline-secondary">
+                                        <i class="fas fa-arrow-left me-1"></i>Cancel
+                                    </a>
+                                    <div>
+                                        <button type="button" class="btn btn-outline-primary me-2" onclick="saveAsDraft()">
+                                            <i class="fas fa-save me-1"></i>Save as Draft
+                                        </button>
+                                        <button type="submit" class="btn btn-primary">
+                                            <i class="fas fa-plus me-1"></i>Add Book
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.form-label strong {
+    color: #495057;
+}
+
+.border-bottom {
+    border-color: #e9ecef !important;
+}
+
+#cover-preview {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+#cover-preview img {
+    max-width: 100%;
+    max-height: 180px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.form-text {
+    font-size: 0.8rem;
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding-left: 10px;
+        padding-right: 10px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Digital book toggle
+document.getElementById('is_digital').addEventListener('change', function() {
+    const digitalOptions = document.getElementById('digital-options');
+    if (this.checked) {
+        digitalOptions.style.display = 'block';
+    } else {
+        digitalOptions.style.display = 'none';
+        // Clear digital fields
+        document.getElementById('file_upload').value = '';
+        document.getElementById('download_url').value = '';
+    }
+});
+
+// Cover image preview
+document.getElementById('cover_image').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    const preview = document.getElementById('cover-preview');
+    
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            preview.innerHTML = `<img src="${e.target.result}" alt="Cover preview">`;
+        };
+        reader.readAsDataURL(file);
+    } else {
+        preview.innerHTML = `
+            <i class="fas fa-image fa-3x text-muted mb-2"></i>
+            <p class="text-muted mb-0">Cover preview will appear here</p>
+        `;
+    }
+});
+
+// Description character count
+document.getElementById('description').addEventListener('input', function() {
+    const count = this.value.length;
+    const counter = document.getElementById('desc-count');
+    counter.textContent = count;
+    
+    if (count > 500) {
+        counter.classList.add('text-danger');
+        this.value = this.value.substring(0, 500);
+        counter.textContent = '500';
+    } else {
+        counter.classList.remove('text-danger');
+    }
+});
+
+// Sync available copies with total copies
+document.getElementById('total_copies').addEventListener('input', function() {
+    const totalCopies = parseInt(this.value) || 0;
+    const availableCopies = document.getElementById('available_copies');
+    const currentAvailable = parseInt(availableCopies.value) || 0;
+    
+    if (currentAvailable > totalCopies) {
+        availableCopies.value = totalCopies;
+    }
+    
+    availableCopies.max = totalCopies;
+});
+
+// Form validation
+document.getElementById('addBookForm').addEventListener('submit', function(e) {
+    const title = document.getElementById('title').value.trim();
+    const author = document.getElementById('author').value.trim();
+    const categoryId = document.getElementById('category_id').value;
+    const totalCopies = parseInt(document.getElementById('total_copies').value);
+    const availableCopies = parseInt(document.getElementById('available_copies').value);
+    
+    if (!title) {
+        e.preventDefault();
+        alert('Please enter a book title.');
+        document.getElementById('title').focus();
+        return;
+    }
+    
+    if (!author) {
+        e.preventDefault();
+        alert('Please enter an author name.');
+        document.getElementById('author').focus();
+        return;
+    }
+    
+    if (!categoryId) {
+        e.preventDefault();
+        alert('Please select a category.');
+        document.getElementById('category_id').focus();
+        return;
+    }
+    
+    if (availableCopies > totalCopies) {
+        e.preventDefault();
+        alert('Available copies cannot exceed total copies.');
+        document.getElementById('available_copies').focus();
+        return;
+    }
+    
+    // Check if digital book has file or URL
+    const isDigital = document.getElementById('is_digital').checked;
+    const fileUpload = document.getElementById('file_upload').files[0];
+    const downloadUrl = document.getElementById('download_url').value.trim();
+    
+    if (isDigital && !fileUpload && !downloadUrl) {
+        e.preventDefault();
+        alert('Please upload a file or provide a download URL for digital books.');
+        return;
+    }
+    
+    // Show loading state
+    const submitBtn = this.querySelector('button[type="submit"]');
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Adding Book...';
+    submitBtn.disabled = true;
+});
+
+// ISBN validation and formatting
+document.getElementById('isbn').addEventListener('input', function() {
+    let isbn = this.value.replace(/[^\d]/g, ''); // Remove non-digits
+    
+    if (isbn.length === 10 || isbn.length === 13) {
+        // Format ISBN
+        if (isbn.length === 13) {
+            this.value = isbn.replace(/(\d{3})(\d{1})(\d{3})(\d{3})(\d{3})/, '$1-$2-$3-$4-$5');
+        } else {
+            this.value = isbn.replace(/(\d{1})(\d{3})(\d{3})(\d{3})/, '$1-$2-$3-$4');
+        }
+    }
+});
+
+// Auto-save as draft functionality
+let autoSaveTimer;
+function autoSaveDraft() {
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = setTimeout(function() {
+        const formData = new FormData(document.getElementById('addBookForm'));
+        localStorage.setItem('bookDraft', JSON.stringify(Object.fromEntries(formData)));
+    }, 2000);
+}
+
+// Load draft on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const savedDraft = localStorage.getItem('bookDraft');
+    if (savedDraft) {
+        const draft = JSON.parse(savedDraft);
+        Object.keys(draft).forEach(key => {
+            const element = document.getElementById(key);
+            if (element && element.type !== 'file') {
+                if (element.type === 'checkbox') {
+                    element.checked = draft[key] === 'on';
+                } else {
+                    element.value = draft[key];
+                }
+            }
+        });
+    }
+});
+
+// Auto-save on input changes
+document.querySelectorAll('input, select, textarea').forEach(element => {
+    if (element.type !== 'file' && element.type !== 'submit') {
+        element.addEventListener('input', autoSaveDraft);
+        element.addEventListener('change', autoSaveDraft);
+    }
+});
+
+function saveAsDraft() {
+    autoSaveDraft();
+    alert('Draft saved successfully!');
+}
+
+// Clear draft on successful submission
+document.getElementById('addBookForm').addEventListener('submit', function() {
+    localStorage.removeItem('bookDraft');
+});
+</script>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}SVG Debug - {{ library_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h1>SVG Rendering Debug</h1>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <h3>Test 1: Inline SVG (should always work)</h3>
+            <svg width="200" height="200" style="border: 2px solid red;">
+                <rect width="200" height="200" fill="lightblue"/>
+                <circle cx="100" cy="100" r="50" fill="orange"/>
+                <text x="100" y="110" text-anchor="middle" fill="white">Test SVG</text>
+            </svg>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <h3>Test 2: External SVG via IMG tag</h3>
+            <img src="{{ url_for('static', filename='images/lesotho_real_outline.svg') }}" 
+                 alt="Real Map" 
+                 style="width: 600px; border: 2px solid green;">
+            <p><strong>URL:</strong> {{ url_for('static', filename='images/lesotho_real_outline.svg') }}</p>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <h3>Test 3: Custom Map SVG</h3>
+            <img src="{{ url_for('static', filename='images/lesotho_map_accurate.svg') }}" 
+                 alt="Custom Map" 
+                 style="width: 600px; border: 2px solid blue;">
+            <p><strong>URL:</strong> {{ url_for('static', filename='images/lesotho_map_accurate.svg') }}</p>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-12">
+            <h3>Test 4: Direct Path</h3>
+            <img src="/static/images/lesotho_real_outline.svg" 
+                 alt="Direct" 
+                 style="width: 600px; border: 2px solid purple;">
+            <p><strong>URL:</strong> /static/images/lesotho_real_outline.svg</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+    {% block extra_css %}
+<style>
+.text-purple {
+    color: #6f42c1 !important;
+}
+
+.tip {
+    padding-left: 1rem;
+    border-left: 3px solid #e9ecef;
+}
+.tip:last-child {
+    border-left: 3px solid transparent;
+}
+.card:hover {
+    transform: translateY(-2px);
+    transition: transform 0.2s ease-in-out;
+}
+.book-card {
+    position: relative;
+}
+.offline-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+}
+.progress {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    background: #e9ecef;
+    position: relative;
+    overflow: hidden;
+}
+.progress-bar.storage-js-bar {
+    border-radius: 12px;
+    background: linear-gradient(90deg, #28a745 0%, #218838 100%);
+    box-shadow: 0 1px 4px rgba(40,167,69,0.15);
+    position: relative;
+    min-width: 2em;
+}
+.storage-js-percent {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+    color: #fff;
+    font-weight: bold;
+    width: 100%;
+    text-align: center;
+    line-height: 24px;
+    font-size: 1rem;
+    pointer-events: none;
+}
+</style>
+    {% endblock %}

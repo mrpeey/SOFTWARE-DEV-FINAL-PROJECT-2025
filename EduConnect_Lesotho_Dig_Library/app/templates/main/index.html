@@ -1,0 +1,1609 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome - {{ library_name }}{% endblock %}
+
+{% block content %}
+<!-- Hero section -->
+<div class="row mb-4">
+    <div class="col-12 text-center">
+        <h4>Share this site:</h4>
+        <div class="d-flex justify-content-center gap-3 mb-3 flex-wrap">
+            <a class="share-btn-email" href="mailto:?subject=Check out this book&body=Here is the link: http://127.0.0.1:8080/book/2" target="_blank"><i class="fas fa-envelope"></i> Email</a>
+            <a class="share-btn-whatsapp" href="https://wa.me/?text=Check out this book: http://127.0.0.1:8080/book/2" target="_blank"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+            <a class="share-btn-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://127.0.0.1:8080/book/2" target="_blank"><i class="fab fa-facebook"></i> Facebook</a>
+        </div>
+    </div>
+</div>
+
+<style>
+    .share-btn-email, .share-btn-whatsapp, .share-btn-facebook {
+        display: inline-block;
+        font-size: 1.15em;
+        font-weight: 600;
+        border-radius: 32px;
+        padding: 0.75em 2em;
+        margin: 0.2em;
+        color: #fff !important;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+        transition: transform 0.15s, box-shadow 0.15s;
+        text-decoration: none;
+    }
+    .share-btn-email {
+        background: #0072c6;
+    }
+    .share-btn-whatsapp {
+        background: #25D366;
+    }
+    .share-btn-facebook {
+        background: #1877f3;
+    }
+    .share-btn-email:hover, .share-btn-whatsapp:hover, .share-btn-facebook:hover {
+        transform: translateY(-2px) scale(1.04);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+        opacity: 0.92;
+    }
+    .share-btn-email i {
+        margin-right: 0.5em;
+    }
+    .share-btn-whatsapp i {
+        margin-right: 0.5em;
+    }
+    .share-btn-facebook i {
+        margin-right: 0.5em;
+    }
+</style>
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="card bg-primary text-white">
+            <div class="card-body text-center py-5">
+                <h1 class="display-4 mb-3">
+                    <i class="fas fa-book-reader"></i>
+                    Welcome to {{ library_name }}
+                </h1>
+                <p class="lead mb-4">
+                    Empowering communities in Lesotho and beyond with accessible digital resources, 
+                    traditional books, and digital literacy programs.
+                </p>
+                <div class="d-flex flex-wrap justify-content-center gap-3">
+                    <a href="{{ url_for('main.search') if current_user.is_authenticated else url_for('auth.login') }}" class="btn btn-light btn-lg">
+                        <i class="fas fa-search"></i> Explore Books
+                    </a>
+                    {% if not current_user.is_authenticated %}
+                        <a href="{{ url_for('auth.register') }}" class="btn btn-outline-light btn-lg">
+                            <i class="fas fa-user-plus"></i> Join Library
+                        </a>
+                    {% endif %}
+                    <a href="{{ url_for('main.digital_literacy') if current_user.is_authenticated else url_for('auth.login') }}" class="btn btn-warning btn-lg">
+                        <i class="fas fa-graduation-cap"></i> Learn Digital Skills
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Image Gallery Carousel -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="text-center mb-4 gallery-header">
+            <h2 class="section-title mb-2 animate-on-scroll">
+                <span class="title-decoration">
+                    <i class="fas fa-images me-2"></i>
+                    Discover Our Amazing Library
+                </span>
+            </h2>
+            <p class="text-muted animate-on-scroll delay-1"  style="color:#fff; font-size:1.15em; font-weight:500; letter-spacing:0.01em;">Explore our modern learning environment and digital resources</p>
+            <div class="gallery-badges mt-3 animate-on-scroll delay-2">
+                <a href="{{ url_for('main.locations') }}" class="badge bg-primary me-2 text-decoration-none" style="cursor: pointer;">
+                    <i class="fas fa-map-marker-alt me-1"></i> 10 Districts of Kingdom Lesotho
+                </a>
+                <a href="{{ url_for('main.search') }}" class="badge bg-success me-2 text-decoration-none" style="cursor: pointer;">
+                    <i class="fas fa-book me-1"></i> {{ "{:,}".format(stats.total_books) }}+ Books Available in Library
+                </a>
+                <a href="{{ url_for('main.digital_literacy') }}" class="badge bg-info text-decoration-none" style="cursor: pointer;">
+                    <i class="fas fa-users me-1"></i> Community Digital Resources
+                </a>
+            </div>
+        </div>
+        <div class="card shadow-lg border-0 professional-card gallery-card">
+            <div class="card-body p-0">
+                <div id="libraryCarousel" class="carousel slide carousel-fade" data-bs-ride="carousel" data-bs-interval="4500" data-bs-pause="hover">
+                    <div class="carousel-indicators">
+                        <button type="button" data-bs-target="#libraryCarousel" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+                        <button type="button" data-bs-target="#libraryCarousel" data-bs-slide-to="1" aria-label="Slide 2"></button>
+                        <button type="button" data-bs-target="#libraryCarousel" data-bs-slide-to="2" aria-label="Slide 3"></button>
+                        <button type="button" data-bs-target="#libraryCarousel" data-bs-slide-to="3" aria-label="Slide 4"></button>
+                        <button type="button" data-bs-target="#libraryCarousel" data-bs-slide-to="4" aria-label="Slide 5"></button>
+                    </div>
+                    <div class="carousel-inner">
+                        <div class="carousel-item active">
+                            <div class="carousel-image-wrapper">
+                                <img src="{{ url_for('static', filename='images/body_image1.jpg') }}" class="d-block w-100 carousel-image" alt="Empowering Education">
+                                <div class="image-overlay"></div>
+                                <div class="image-border-effect"></div>
+                            </div>
+                            <div class="carousel-caption">
+                                <div class="caption-content">
+                                    <div class="caption-icon-wrapper">
+                                        <div class="caption-icon">
+                                            <i class="fas fa-graduation-cap"></i>
+                                        </div>
+                                    </div>
+                                    <h3 class="caption-title">Empowering Education</h3>
+                                    <p class="caption-text">Building knowledge and skills for tomorrow's leaders</p>
+                                    <div class="caption-badge">
+                                        <span class="badge badge-custom">
+                                            <i class="fas fa-star me-1"></i>Excellence
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="carousel-item">
+                            <div class="carousel-image-wrapper">
+                                <img src="{{ url_for('static', filename='images/body_image2.jpg') }}" class="d-block w-100 carousel-image" alt="Digital Resources">
+                                <div class="image-overlay"></div>
+                                <div class="image-border-effect"></div>
+                            </div>
+                            <div class="carousel-caption">
+                                <div class="caption-content">
+                                    <div class="caption-icon-wrapper">
+                                        <div class="caption-icon">
+                                            <i class="fas fa-book-open"></i>
+                                        </div>
+                                    </div>
+                                    <h3 class="caption-title">Digital Resources</h3>
+                                    <p class="caption-text">Access thousands of curated digital books and materials</p>
+                                    <div class="caption-badge">
+                                        <span class="badge badge-custom">
+                                            <i class="fas fa-infinity me-1"></i>Unlimited Access
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="carousel-item">
+                            <div class="carousel-image-wrapper">
+                                <img src="{{ url_for('static', filename='images/body_image3.jpg') }}" class="d-block w-100 carousel-image" alt="Community Learning">
+                                <div class="image-overlay"></div>
+                                <div class="image-border-effect"></div>
+                            </div>
+                            <div class="carousel-caption">
+                                <div class="caption-content">
+                                    <div class="caption-icon-wrapper">
+                                        <div class="caption-icon">
+                                            <i class="fas fa-users"></i>
+                                        </div>
+                                    </div>
+                                    <h3 class="caption-title">Community Learning</h3>
+                                    <p class="caption-text">Bringing communities together through shared knowledge</p>
+                                    <div class="caption-badge">
+                                        <span class="badge badge-custom">
+                                            <i class="fas fa-heart me-1"></i>Community First
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="carousel-item">
+                            <div class="carousel-image-wrapper">
+                                <img src="{{ url_for('static', filename='images/body_image4.jpg') }}" class="d-block w-100 carousel-image" alt="Knowledge for All">
+                                <div class="image-overlay"></div>
+                                <div class="image-border-effect"></div>
+                            </div>
+                            <div class="carousel-caption">
+                                <div class="caption-content">
+                                    <div class="caption-icon-wrapper">
+                                        <div class="caption-icon">
+                                            <i class="fas fa-globe-africa"></i>
+                                        </div>
+                                    </div>
+                                    <h3 class="caption-title">Knowledge for All</h3>
+                                    <p class="caption-text">Free and accessible learning resources for everyone</p>
+                                    <div class="caption-badge">
+                                        <span class="badge badge-custom">
+                                            <i class="fas fa-lock-open me-1"></i>Free Access
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="carousel-item">
+                            <div class="carousel-image-wrapper">
+                                <img src="{{ url_for('static', filename='images/body_image5.jpg') }}" class="d-block w-100 carousel-image" alt="Innovation & Technology">
+                                <div class="image-overlay"></div>
+                                <div class="image-border-effect"></div>
+                            </div>
+                            <div class="carousel-caption">
+                                <div class="caption-content">
+                                    <div class="caption-icon-wrapper">
+                                        <div class="caption-icon">
+                                            <i class="fas fa-lightbulb"></i>
+                                        </div>
+                                    </div>
+                                    <h3 class="caption-title">Innovation & Technology</h3>
+                                    <p class="caption-text">Embracing modern technology for better learning outcomes</p>
+                                    <div class="caption-badge">
+                                        <span class="badge badge-custom">
+                                            <i class="fas fa-rocket me-1"></i>Future Ready
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="carousel-control-prev" type="button" data-bs-target="#libraryCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Previous</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#libraryCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Next</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tech Article of the Day -->
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="text-center mb-4">
+            <h2 class="section-title mb-2">
+                <span class="title-decoration">
+                    <i class="fas fa-newspaper me-2"></i>
+                    Tech Article of the Day
+                </span>
+            </h2>
+            <p class="text-muted">Stay informed with the latest in educational technology</p>
+        </div>
+        
+        <div class="card border-0 shadow-lg tech-article-main-card">
+            <div class="row g-0">
+                <!-- Left side - Icon and controls -->
+                <div class="col-md-3 tech-article-sidebar">
+                    <div class="d-flex flex-column align-items-center justify-content-center h-100 p-4">
+                        <div class="tech-icon-circle mb-4">
+                            <i class="fas fa-microchip fa-3x"></i>
+                        </div>
+                        <h5 class="text-white mb-2 text-center">Educational Technology</h5>
+                        <p class="text-white-50 small text-center mb-4">Curated learning resources</p>
+                        <button class="btn btn-light btn-refresh w-100" onclick="loadNewTechArticle()" id="refreshArticle">
+                            <i class="fas fa-sync-alt me-2"></i>Load New Article
+                        </button>
+                        <small class="text-white-50 mt-3 text-center">
+                            <i class="fas fa-redo-alt me-1"></i>Auto-refreshes every 30s
+                        </small>
+                    </div>
+                </div>
+                
+                <!-- Right side - Article content -->
+                <div class="col-md-9">
+                    <div class="card-body p-4" id="techArticleContainer">
+                        <div class="text-center py-5">
+                            <div class="spinner-grow text-primary" role="status" style="width: 3rem; height: 3rem;">
+                                <span class="visually-hidden">Loading...</span>
+                            </div>
+                            <p class="text-muted mt-3 fw-bold">Fetching the latest article...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics -->
+<div class="row mb-5">
+    <div class="col-md-3 col-6 mb-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <i class="fas fa-book fa-3x text-primary mb-3"></i>
+                <h3 class="text-primary">{{ stats.total_books }}</h3>
+                <p class="mb-0">Total Books</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6 mb-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <i class="fas fa-download fa-3x text-success mb-3"></i>
+                <h3 class="text-success">{{ stats.digital_books }}</h3>
+                <p class="mb-0">Digital Resources</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6 mb-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <i class="fas fa-users fa-3x text-info mb-3"></i>
+                <h3 class="text-info">{{ stats.total_users }}</h3>
+                <p class="mb-0">Active Users</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3 col-6 mb-3">
+        <div class="card text-center h-100">
+            <div class="card-body">
+                <i class="fas fa-handshake fa-3x text-warning mb-3"></i>
+                <h3 class="text-warning">{{ stats.active_borrowings }}</h3>
+                <p class="mb-0">Active Loans</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Featured Books -->
+{% if featured_books %}
+<div class="row mb-5">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i class="fas fa-star text-warning"></i>
+            Recommended Reading
+        </h2>
+        <div class="row">
+            {% for book in featured_books %}
+            <div class="col-lg-4 col-md-6 mb-4">
+                <div class="card book-card h-100">
+                    <div class="featured-cover-wrapper" style="position: relative; overflow: hidden;">
+                        {% if book.cover_image %}
+                            <img src="{{ url_for('static', filename='uploads/covers/' + book.cover_image) }}" 
+                                 class="featured-cover card-img-top rounded" loading="lazy"
+                                 alt="{{ book.title }} cover" style="border-radius: 12px;">
+                        {% else %}
+                            {% include 'shared/book_cover_svg.html' %}
+                        {% endif %}
+                    </div>
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">{{ book.title }}</h5>
+                        <p class="text-muted mb-2">by {{ book.author }}</p>
+                        <p class="card-text flex-grow-1">{{ book.description[:100] }}{% if book.description|length > 100 %}...{% endif %}</p>
+                        <div class="d-flex justify-content-between align-items-center mt-auto">
+                            <a href="{{ url_for('books.my_book', book_id=book.id) if current_user.is_authenticated else url_for('auth.login') }}" class="btn btn-primary w-100">View Details</a>
+                        </div>
+                        {% if current_user.is_authenticated %}
+                        <div class="mt-2">
+                            <a href="{{ url_for('main.index') }}" class="btn btn-outline-secondary w-100">My Books</a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+{% else %}
+<div class="row mb-5">
+    <div class="col-12 text-center">
+        <h2 class="mb-4">
+            <i class="fas fa-star text-warning"></i>
+            Recommended Reading
+        </h2>
+        <div class="d-flex flex-column align-items-center">
+            <img src="{{ url_for('static', filename='images/default_cover.svg') }}" alt="Default Cover" style="width:120px; height:180px; margin-bottom:16px;" />
+            <p class="text-muted" style="font-size:1.2em;">No recommended book available</p>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Categories -->
+<div class="row mb-5" id="categories">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i class="fas fa-tags text-primary"></i>
+            Browse by Category
+        </h2>
+        <div class="row">
+            {% set icons = {
+                'Academic': 'fas fa-university',
+                'Literature': 'fas fa-feather-alt',
+                'Science': 'fas fa-flask',
+                'Technology': 'fas fa-microchip',
+                'History': 'fas fa-landmark',
+                'Culture': 'fas fa-globe-africa',
+                'Health': 'fas fa-heartbeat',
+                'Medicine': 'fas fa-notes-medical',
+                'Agriculture': 'fas fa-seedling',
+                'Business': 'fas fa-briefcase',
+                'Economics': 'fas fa-chart-line',
+                'Government': 'fas fa-balance-scale',
+                'Law': 'fas fa-gavel',
+                'Digital': 'fas fa-tablet-alt',
+                'Literacy': 'fas fa-book-reader',
+                'Local': 'fas fa-map-marker-alt'
+            } %}
+            {% for category in categories %}
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-3">
+                <a href="{{ url_for('main.category_books', category_id=category.id) if current_user.is_authenticated else url_for('auth.login') }}" 
+                   class="text-decoration-none">
+                    <div class="card h-100 category-card position-relative {% if loop.index <= 4 %}popular-category{% endif %}" data-category="{{ category.name }}">
+                        <div class="card-body text-center">
+                            <div class="mb-2">
+                                <i class="{{ icons.get(category.name.split(' ')[0], 'fas fa-tag') }} fa-2x text-primary"></i>
+                            </div>
+                            <h6 class="card-title mb-1">{{ category.name }}</h6>
+                            <p class="text-muted mb-0">{{ category.book_count }} books</p>
+                            {% if loop.index <= 4 %}
+                                <span class="badge bg-warning text-dark popular-badge position-absolute top-0 end-0 m-2">Popular</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-3">
+            <a href="{{ url_for('main.categories') if current_user.is_authenticated else url_for('auth.login') }}" class="btn btn-outline-primary">
+                View All Categories
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Additions -->
+{% if recent_books %}
+<div class="row mb-5" id="recent-additions">
+    <div class="col-12">
+        <h2 class="mb-4">
+            <i class="fas fa-clock text-info"></i>
+            Recent Additions
+        </h2>
+        <div class="row">
+            {% for book in recent_books %}
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-3">
+                <div class="card book-card h-100">
+                    {% set category_colors = {
+                        'Academic': '#3b82f6',
+                        'Literature': '#a855f7',
+                        'Science': '#14b8a6',
+                        'Technology': '#0ea5e9',
+                        'History': '#f59e42',
+                        'Culture': '#f43f5e',
+                        'Health': '#22c55e',
+                        'Medicine': '#eab308',
+                        'Agriculture': '#84cc16',
+                        'Business': '#f97316',
+                        'Economics': '#e11d48',
+                        'Government': '#6366f1',
+                        'Law': '#f43f5e',
+                        'Digital': '#0ea5e9',
+                        'Literacy': '#a855f7',
+                        'Local': '#f59e42'
+                    } %}
+                    {% set cat_color = category_colors.get(book.category.name.split(' ')[0] if book.category else '', '#764ba2') %}
+                    {% if book.cover_image %}
+                        <img src="{{ url_for('static', filename='uploads/covers/' + book.cover_image) }}" class="card-img-top rounded" alt="{{ book.title }} cover" style="height: 200px; object-fit: cover; border-radius: 12px;">
+                    {% else %}
+                        {% set category_colors = {
+                            'Academic': ['#3b82f6', '#60a5fa'],
+                            'Literature': ['#a855f7', '#f472b6'],
+                            'Science': ['#14b8a6', '#06b6d4'],
+                            'Technology': ['#0ea5e9', '#6366f1'],
+                            'History': ['#f59e42', '#fbbf24'],
+                            'Culture': ['#f43f5e', '#fb7185'],
+                            'Health': ['#22c55e', '#4ade80'],
+                            'Medicine': ['#eab308', '#fde68a'],
+                            'Agriculture': ['#84cc16', '#a3e635'],
+                            'Business': ['#f97316', '#fbbf24'],
+                            'Economics': ['#e11d48', '#f472b6'],
+                            'Government': ['#6366f1', '#818cf8'],
+                            'Law': ['#f43f5e', '#e11d48'],
+                            'Digital': ['#0ea5e9', '#38bdf8'],
+                            'Literacy': ['#a855f7', '#6366f1'],
+                            'Local': ['#f59e42', '#fbbf24']
+                        } %}
+                        {% set cat_colors = category_colors.get(book.category.name.split(' ')[0] if book.category else '', ['#764ba2', '#a855f7']) %}
+                        {% set title_length = book.title|length %}
+                        {% set author_length = book.author|length %}
+                        {% set title_font = 16 if title_length <= 30 else 13 if title_length <= 40 else 11 %}
+                        {% set author_font = 13 if author_length <= 24 else 11 %}
+                        {% set title_length = book.title|length %}
+                        {% set author_length = book.author|length %}
+                        {% set svg_height = 280 if title_length > 40 or author_length > 32 else 240 %}
+                        {% set svg_width = 280 if title_length > 40 or author_length > 32 else 240 %}
+                        <svg width="100%" height="{{ svg_height }}" viewBox="0 0 {{ svg_width }} {{ svg_height }}" xmlns="http://www.w3.org/2000/svg" style="background: #f8f9fa; border-radius: 16px;">
+                            <defs>
+                                <linearGradient id="grad{{ loop.index }}" x1="0" y1="0" x2="1" y2="1">
+                                    <stop offset="0%" stop-color="{{ cat_colors[0] }}" />
+                                    <stop offset="100%" stop-color="{{ cat_colors[1] }}" />
+                                </linearGradient>
+                            </defs>
+                            <rect width="{{ svg_width }}" height="{{ svg_height }}" rx="32" fill="url(#grad{{ loop.index }})"/>
+                            {% set dynamic_title_font = 22 if title_length <= 30 else 18 if title_length <= 40 else 15 %}
+                            {% set dynamic_author_font = 18 if author_length <= 24 else 15 %}
+                            <text x="50%" y="38%" text-anchor="middle" fill="#fff" font-size="{{ dynamic_title_font }}" font-weight="bold" font-family="Arial, sans-serif">{{ book.title|truncate(60, True, '...') }}</text>
+                            <text x="50%" y="60%" text-anchor="middle" fill="#e0e0e0" font-size="{{ dynamic_author_font }}" font-family="Arial, sans-serif">{{ book.author|truncate(40, True, '...') }}</text>
+                            <g>
+                                <circle cx="200" cy="40" r="22" fill="#fff" opacity="0.15" />
+                                <text x="{{ svg_width - 40 }}" y="50" text-anchor="middle" fill="#fff" font-size="22" font-family="Arial">&#128214;</text>
+                            </g>
+                        </svg>
+                    {% endif %}
+                    <div class="card-body">
+                        <h6 class="card-title">{{ book.title }}</h6>
+                        <p class="text-muted small mb-2">by {{ book.author }}</p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                {% if book.is_digital %}
+                                    <i class="fas fa-download text-success"></i>
+                                {% else %}
+                                    <i class="fas fa-book text-primary"></i>
+                                {% endif %}
+                                {{ book.category.name if book.category }}
+                            </small>
+                            {% if current_user.is_authenticated %}
+                                <a href="{{ url_for('books.my_book', book_id=book.id) }}" class="btn btn-outline-primary btn-sm">View</a>
+                            {% else %}
+                                <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary btn-sm">View</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Quick Access -->
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-wifi text-danger"></i>
+                    Offline Access
+                </h5>
+                <p class="card-text">
+                    Download books for offline reading in areas with limited internet connectivity.
+                    Perfect for rural communities and low-bandwidth environments.
+                </p>
+                <a href="{{ url_for('main.offline_access') }}" class="btn btn-outline-primary">
+                    Learn More
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="fas fa-graduation-cap text-success"></i>
+                    Digital Literacy
+                </h5>
+                <p class="card-text">
+                    Free resources and training materials to help you develop essential 
+                    digital skills for education and employment.
+                </p>
+                <a href="{{ url_for('main.digital_literacy') }}" class="btn btn-outline-success">
+                    Start Learning
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+    
+    {% endblock %}
+
+{% block extra_css %}
+<style>
+    .category-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+        border: none;
+    }
+    
+    /* Academic - Blue */
+    .category-card[data-category*="Academic"]:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(25, 118, 210, 0.3);
+        background: linear-gradient(135deg, rgba(25, 118, 210, 0.1), rgba(25, 118, 210, 0.05));
+    }
+    
+    /* Literature - Purple */
+    .category-card[data-category*="Literature"]:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(156, 39, 176, 0.3);
+        background: linear-gradient(135deg, rgba(156, 39, 176, 0.1), rgba(156, 39, 176, 0.05));
+    }
+    
+    /* Science/Technology - Teal */
+    .category-card[data-category*="Science"]:hover,
+    .category-card[data-category*="Technology"]:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 150, 136, 0.3);
+        background: linear-gradient(135deg, rgba(0, 150, 136, 0.1), rgba(0, 150, 136, 0.05));
+    }
+    
+    /* History/Culture - Brown */
+    .category-card[data-category*="History"]:hover,
+    .category-card[data-category*="Culture"]:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(121, 85, 72, 0.3);
+        background: linear-gradient(135deg, rgba(121, 85, 72, 0.1), rgba(121, 85, 72, 0.05));
+    }
+    
+    /* Health/Medicine - Red */
+    .category-card[data-category*="Health"]:hover,
+    .category-card[data-category*="Medicine"]:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(244, 67, 54, 0.3);
+        background: linear-gradient(135deg, rgba(244, 67, 54, 0.1), rgba(244, 67, 54, 0.05));
+    }
+    
+    /* Agriculture - Green */
+    .category-card[data-category*="Agriculture"]:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(76, 175, 80, 0.3);
+        background: linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(76, 175, 80, 0.05));
+    }
+    
+    /* Business/Economics - Orange */
+    .category-card[data-category*="Business"]:hover,
+    .category-card[data-category*="Economics"]:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(255, 152, 0, 0.3);
+        background: linear-gradient(135deg, rgba(255, 152, 0, 0.1), rgba(255, 152, 0, 0.05));
+    }
+    
+    /* Government/Law - Indigo */
+    .category-card[data-category*="Government"]:hover,
+    .category-card[data-category*="Law"]:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(63, 81, 181, 0.3);
+        background: linear-gradient(135deg, rgba(63, 81, 181, 0.1), rgba(63, 81, 181, 0.05));
+    }
+    
+    /* Digital/Literacy - Deep Purple */
+    .category-card[data-category*="Digital"]:hover,
+    .category-card[data-category*="Literacy"]:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(103, 58, 183, 0.3);
+        background: linear-gradient(135deg, rgba(103, 58, 183, 0.1), rgba(103, 58, 183, 0.05));
+    }
+    
+    /* Local - Pink */
+    .category-card[data-category*="Local"]:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(233, 30, 99, 0.3);
+        background: linear-gradient(135deg, rgba(233, 30, 99, 0.1), rgba(233, 30, 99, 0.05));
+    }
+    
+    /* Default - Blue Grey */
+    .category-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(96, 125, 139, 0.3);
+        background: linear-gradient(135deg, rgba(96, 125, 139, 0.1), rgba(96, 125, 139, 0.05));
+    }
+    
+    .hero-section {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    }
+    
+    /* Moving Text Animation */
+    .moving-text-container {
+        overflow: hidden;
+        width: 100%;
+    }
+    
+    .moving-text {
+        display: inline-block;
+        animation: scroll-left 15s linear infinite;
+        white-space: nowrap;
+        padding-left: 100%;
+    }
+    
+    @keyframes scroll-left {
+        0% {
+            transform: translateX(0);
+        }
+        100% {
+            transform: translateX(-100%);
+        }
+    }
+    
+    .moving-text:hover {
+        animation-play-state: paused;
+    }
+    
+    /* Enhanced Gallery Header Animations */
+    @keyframes slideInFromTop {
+        from {
+            opacity: 0;
+            transform: translateY(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .animate-on-scroll {
+        animation: slideInFromTop 0.8s ease-out;
+    }
+    
+    .animate-on-scroll.delay-1 {
+        animation-delay: 0.2s;
+        opacity: 0;
+        animation-fill-mode: forwards;
+    }
+    
+    .animate-on-scroll.delay-2 {
+        animation-delay: 0.4s;
+        opacity: 0;
+        animation-fill-mode: forwards;
+    }
+    
+    /* Professional Section Title */
+    .section-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #2c3e50;
+        position: relative;
+        display: inline-block;
+    }
+    
+    .title-decoration {
+        position: relative;
+        padding-bottom: 15px;
+        background: linear-gradient(120deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .title-decoration::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80px;
+        height: 4px;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        border-radius: 2px;
+        animation: expandLine 1s ease-out;
+    }
+    
+    @keyframes expandLine {
+        from {
+            width: 0;
+        }
+        to {
+            width: 80px;
+        }
+    }
+    
+    /* Gallery Badges */
+    .gallery-badges .badge {
+        padding: 0.6rem 1rem;
+        font-size: 0.9rem;
+        font-weight: 600;
+        border-radius: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .gallery-badges .badge:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    
+    /* Professional Card Styling */
+    .professional-card {
+        border-radius: 16px;
+        overflow: hidden;
+        transition: transform 0.4s ease, box-shadow 0.4s ease;
+        position: relative;
+    }
+    
+    .professional-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border-radius: 16px;
+        padding: 2px;
+        background: linear-gradient(135deg, #667eea, #764ba2, #667eea);
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        mask-composite: exclude;
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        z-index: 1;
+    }
+    
+    .professional-card:hover::before {
+        opacity: 1;
+    }
+    
+    .professional-card:hover {
+        transform: translateY(-8px) scale(1.01);
+        box-shadow: 0 2rem 5rem rgba(102, 126, 234, 0.3) !important;
+    }
+    
+    .gallery-card {
+        animation: cardFadeIn 1s ease-out;
+    }
+    
+    @keyframes cardFadeIn {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+    
+    /* Enhanced Carousel Styling */
+    .carousel-image-wrapper {
+        position: relative;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        overflow: hidden;
+    }
+    
+    .carousel-image {
+        height: 550px;
+        object-fit: contain;
+        transition: transform 0.6s ease, filter 0.6s ease;
+        filter: brightness(1) contrast(1.05);
+    }
+    
+    .carousel-item:hover .carousel-image {
+        transform: scale(1.05);
+        filter: brightness(1.1) contrast(1.1);
+    }
+    
+    .image-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.3) 40%, transparent 70%);
+        pointer-events: none;
+        transition: opacity 0.4s ease;
+    }
+    
+    .carousel-item:hover .image-overlay {
+        opacity: 0.9;
+    }
+    
+    /* Animated Border Effect */
+    .image-border-effect {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border: 3px solid transparent;
+        background: linear-gradient(135deg, #667eea, #764ba2) border-box;
+        -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+        -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+        mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        opacity: 0;
+        transition: opacity 0.4s ease;
+        animation: borderGlow 3s ease-in-out infinite;
+    }
+    
+    .carousel-item:hover .image-border-effect {
+        opacity: 0.6;
+    }
+    
+    @keyframes borderGlow {
+        0%, 100% {
+            filter: brightness(1);
+        }
+        50% {
+            filter: brightness(1.3);
+        }
+    }
+    
+    .carousel-caption {
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 2.5rem 1rem 2rem;
+        background: transparent;
+        text-align: center;
+    }
+    
+    .caption-content {
+        animation: fadeInUp 1s ease-out;
+        max-width: 700px;
+        margin: 0 auto;
+    }
+    
+    /* Enhanced Icon Animation */
+    .caption-icon-wrapper {
+        display: inline-block;
+        margin-bottom: 1rem;
+    }
+    
+    .caption-icon {
+        font-size: 3rem;
+        color: #ffffff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.9), rgba(118, 75, 162, 0.9));
+        border-radius: 50%;
+        text-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+        animation: iconPulse 2s ease-in-out infinite, iconFloat 3s ease-in-out infinite;
+        backdrop-filter: blur(10px);
+        border: 3px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    @keyframes iconPulse {
+        0%, 100% {
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4), 0 0 0 0 rgba(102, 126, 234, 0.7);
+        }
+        50% {
+            box-shadow: 0 8px 35px rgba(102, 126, 234, 0.6), 0 0 0 15px rgba(102, 126, 234, 0);
+        }
+    }
+    
+    @keyframes iconFloat {
+        0%, 100% {
+            transform: translateY(0);
+        }
+        50% {
+            transform: translateY(-10px);
+        }
+    }
+    
+    .caption-title {
+        color: #ffffff;
+        font-size: 1.9rem;
+        font-weight: 700;
+        text-shadow: 0 3px 15px rgba(0,0,0,0.9);
+        margin-bottom: 0.75rem;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        animation: titleSlideIn 0.8s ease-out 0.3s backwards;
+    }
+    
+    @keyframes titleSlideIn {
+        from {
+            opacity: 0;
+            transform: translateX(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    .caption-text {
+        color: #f8f9fa;
+        font-size: 1.15rem;
+        text-shadow: 0 2px 8px rgba(0,0,0,0.9);
+        font-weight: 400;
+        line-height: 1.7;
+        animation: textFadeIn 1s ease-out 0.5s backwards;
+    }
+    
+    @keyframes textFadeIn {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 1;
+        }
+    }
+    
+    /* Caption Badges */
+    .caption-badge {
+        margin-top: 1rem;
+        animation: badgeSlideIn 1s ease-out 0.7s backwards;
+    }
+    
+    .badge-custom {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.15));
+        color: #ffffff;
+        padding: 0.5rem 1.2rem;
+        font-size: 0.95rem;
+        font-weight: 600;
+        border-radius: 25px;
+        border: 2px solid rgba(255, 255, 255, 0.4);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        transition: all 0.3s ease;
+    }
+    
+    .badge-custom:hover {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.25));
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+    }
+    
+    @keyframes badgeSlideIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Enhanced Carousel Controls */
+    .carousel-control-prev,
+    .carousel-control-next {
+        width: 70px;
+        opacity: 0;
+        transition: opacity 0.4s ease, transform 0.3s ease;
+    }
+    
+    .carousel:hover .carousel-control-prev,
+    .carousel:hover .carousel-control-next {
+        opacity: 1;
+    }
+    
+    .carousel-control-prev:hover {
+        transform: translateX(-5px);
+    }
+    
+    .carousel-control-next:hover {
+        transform: translateX(5px);
+    }
+    
+    .carousel-control-prev-icon,
+    .carousel-control-next-icon {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.95), rgba(118, 75, 162, 0.95));
+        border-radius: 12px;
+        padding: 28px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        transition: all 0.4s ease;
+        backdrop-filter: blur(10px);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .carousel-control-prev-icon::before,
+    .carousel-control-next-icon::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 0;
+        height: 0;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        transition: width 0.4s ease, height 0.4s ease;
+    }
+    
+    .carousel-control-prev-icon:hover::before,
+    .carousel-control-next-icon:hover::before {
+        width: 100%;
+        height: 100%;
+    }
+    
+    .carousel-control-prev-icon:hover,
+    .carousel-control-next-icon:hover {
+        background: linear-gradient(135deg, rgba(118, 75, 162, 1), rgba(102, 126, 234, 1));
+        transform: scale(1.15) rotate(5deg);
+        box-shadow: 0 12px 35px rgba(102, 126, 234, 0.6);
+        border-color: rgba(255, 255, 255, 0.6);
+    }
+    
+    /* Enhanced Carousel Indicators */
+    .carousel-indicators {
+        margin-bottom: 2rem;
+        gap: 8px;
+    }
+    
+    .carousel-indicators button {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        margin: 0 6px;
+        background-color: rgba(255, 255, 255, 0.4);
+        border: 2px solid rgba(255, 255, 255, 0.7);
+        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        opacity: 0.7;
+        position: relative;
+        overflow: visible;
+    }
+    
+    .carousel-indicators button::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.5);
+        transition: width 0.3s ease, height 0.3s ease;
+    }
+    
+    .carousel-indicators button:hover {
+        opacity: 1;
+        background-color: rgba(255, 255, 255, 0.7);
+        transform: scale(1.3);
+    }
+    
+    .carousel-indicators button:hover::after {
+        width: 200%;
+        height: 200%;
+    }
+    
+    .carousel-indicators button.active {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        border-color: #ffffff;
+        width: 45px;
+        border-radius: 8px;
+        opacity: 1;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.5);
+        animation: indicatorActive 0.5s ease-out;
+    }
+    
+    @keyframes indicatorActive {
+        0% {
+            width: 14px;
+            border-radius: 50%;
+        }
+        50% {
+            transform: scale(1.2);
+        }
+        100% {
+            width: 45px;
+            border-radius: 8px;
+            transform: scale(1);
+        }
+    }
+    
+    .carousel-fade .carousel-item {
+        opacity: 0;
+        transition: opacity 0.8s ease-in-out;
+    }
+    
+    .carousel-fade .carousel-item.active {
+        opacity: 1;
+    }
+    
+    .shadow-lg {
+        box-shadow: 0 0.5rem 2rem rgba(0,0,0,.12) !important;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .section-title {
+            font-size: 2rem;
+        }
+        
+        .carousel-image {
+            height: 450px;
+        }
+        
+        .caption-icon {
+            font-size: 2rem;
+        }
+        
+        .caption-title {
+            font-size: 1.3rem;
+        }
+        
+        .caption-text {
+            font-size: 0.95rem;
+        }
+        
+        .carousel-control-prev-icon,
+        .carousel-control-next-icon {
+            padding: 18px;
+        }
+        
+        .carousel-control-prev,
+        .carousel-control-next {
+            width: 45px;
+        }
+    }
+    
+    @media (min-width: 769px) and (max-width: 1024px) {
+        .carousel-image {
+            height: 500px;
+        }
+        
+        .caption-title {
+            font-size: 1.5rem;
+        }
+    }
+    
+    /* Tech Article Styles - Professional Edition */
+    .tech-article-main-card {
+        overflow: hidden;
+        border-radius: 20px !important;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .tech-article-main-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
+    }
+    
+    .tech-article-sidebar {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .tech-article-sidebar::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        animation: rotate 20s linear infinite;
+    }
+    
+    @keyframes rotate {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    .tech-icon-circle {
+        width: 100px;
+        height: 100px;
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        backdrop-filter: blur(10px);
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        animation: pulse-glow 3s ease-in-out infinite;
+        position: relative;
+        z-index: 1;
+    }
+    
+    @keyframes pulse-glow {
+        0%, 100% {
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), 0 0 20px rgba(255, 255, 255, 0.2);
+            transform: scale(1);
+        }
+        50% {
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2), 0 0 40px rgba(255, 255, 255, 0.4);
+            transform: scale(1.05);
+        }
+    }
+    
+    .btn-refresh {
+        border-radius: 25px;
+        font-weight: 600;
+        padding: 10px 20px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        position: relative;
+        z-index: 1;
+    }
+    
+    .btn-refresh:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    }
+    
+    .btn-refresh:active {
+        transform: translateY(0);
+    }
+    
+    .tech-article-card {
+        background: white;
+        border-radius: 15px;
+        padding: 30px;
+        transition: all 0.3s ease;
+        border-left: 5px solid transparent;
+    }
+    
+    .tech-article-card:hover {
+        border-left-color: #667eea;
+        background: linear-gradient(to right, #f8f9ff 0%, white 100%);
+    }
+    
+    .article-badge {
+        display: inline-block;
+        padding: 8px 20px;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border-radius: 25px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 15px;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        transition: all 0.3s ease;
+    }
+    
+    .article-badge:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+    }
+    
+    .article-meta {
+        color: #6c757d;
+        font-size: 0.9rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #f0f0f0;
+    }
+    
+    .article-meta i {
+        color: #667eea;
+    }
+    
+    .article-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #1a202c;
+        margin: 20px 0;
+        line-height: 1.4;
+        background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .article-description {
+        color: #4a5568;
+        line-height: 1.8;
+        font-size: 1.05rem;
+        margin-bottom: 25px;
+        text-align: justify;
+    }
+    
+    .read-more-btn {
+        background: linear-gradient(135deg, #667eea, #764ba2);
+        color: white;
+        border: none;
+        padding: 12px 30px;
+        border-radius: 30px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.3s ease;
+        font-weight: 600;
+        box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .read-more-btn:hover {
+        transform: translateX(5px) translateY(-2px);
+        box-shadow: 0 6px 25px rgba(102, 126, 234, 0.5);
+        color: white;
+    }
+    
+    .read-more-btn i {
+        transition: transform 0.3s ease;
+    }
+    
+    .read-more-btn:hover i {
+        transform: translateX(3px);
+    }
+    
+    .article-footer-info {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        background: #f7fafc;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        color: #718096;
+        border: 1px solid #e2e8f0;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .tech-article-sidebar {
+            padding: 30px 20px !important;
+        }
+        
+        .tech-icon-circle {
+            width: 80px;
+            height: 80px;
+        }
+        
+        .tech-icon-circle i {
+            font-size: 2rem !important;
+        }
+        
+        .article-title {
+            font-size: 1.5rem;
+        }
+        
+        .article-description {
+            font-size: 1rem;
+        }
+    }
+</style>
+
+<script>
+const LOGIN_URL = "{{ url_for('auth.login') }}";
+// Tech Article Fetcher
+const techArticles = [
+    {
+        title: "Understanding Artificial Intelligence in Education",
+        description: "Explore how AI is transforming the way students learn and teachers teach. From personalized learning paths to automated grading, AI is making education more accessible and effective for learners worldwide.",
+        category: "AI & Education",
+        source: "EdTech Magazine",
+        date: "2025-11-08",
+        url: "https://www.nature.com/articles/s41599-023-01649-4",
+        readTime: "5 min read"
+    },
+    {
+        title: "The Future of Digital Libraries in Africa",
+        description: "Digital libraries are bridging the knowledge gap in African communities. Learn how technology is making educational resources accessible to students in remote areas, improving literacy rates and academic performance.",
+        category: "Digital Learning",
+        source: "African Tech Review",
+        date: "2025-11-07",
+        url: "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0291419",
+        readTime: "7 min read"
+    },
+    {
+        title: "Coding for Beginners: Why Every Student Should Learn",
+        description: "Programming is becoming an essential skill for the 21st century. Discover why learning to code can open doors to new opportunities and how students can start their coding journey with free online resources.",
+        category: "Programming",
+        source: "Code.org Insights",
+        date: "2025-11-06",
+        url: "https://www.sciencedirect.com/science/article/pii/S2666920X21000333",
+        readTime: "6 min read"
+    },
+    {
+        title: "Climate Change Education: Teaching Sustainability",
+        description: "Learn how educators are incorporating climate change and sustainability into their curriculum. Understanding environmental challenges is crucial for creating a sustainable future in Lesotho and beyond.",
+        category: "Science & Environment",
+        source: "Environmental Education Journal",
+        date: "2025-11-05",
+        url: "https://www.tandfonline.com/doi/full/10.1080/13504622.2023.2166803",
+        readTime: "8 min read"
+    },
+    {
+        title: "Mobile Learning: Education in Your Pocket",
+        description: "Mobile devices are revolutionizing access to education. Discover how smartphones and tablets are being used to deliver quality educational content to students without access to traditional computers.",
+        category: "Mobile Technology",
+        source: "Mobile Learning Today",
+        date: "2025-11-04",
+        url: "https://educationaltechnologyjournal.springeropen.com/articles/10.1186/s41239-023-00382-9",
+        readTime: "5 min read"
+    },
+    {
+        title: "Critical Thinking in the Digital Age",
+        description: "With information overload, critical thinking is more important than ever. Learn strategies to evaluate online sources, identify misinformation, and develop strong analytical skills for academic success.",
+        category: "Digital Literacy",
+        source: "Learning Sciences Quarterly",
+        date: "2025-11-03",
+        url: "https://www.frontiersin.org/articles/10.3389/feduc.2023.1071235/full",
+        readTime: "6 min read"
+    },
+    {
+        title: "STEM Education: Building Tomorrow's Innovators",
+        description: "Science, Technology, Engineering, and Mathematics (STEM) education is crucial for economic development. Explore innovative teaching methods and hands-on projects that make STEM subjects engaging and accessible.",
+        category: "STEM Learning",
+        source: "STEM Education Review",
+        date: "2025-11-02",
+        url: "https://www.mdpi.com/2227-7102/13/4/424",
+        readTime: "7 min read"
+    },
+    {
+        title: "Online Collaboration Tools for Students",
+        description: "Learn about the best digital tools for group projects and collaborative learning. From video conferencing to shared documents, discover how technology facilitates teamwork in modern education.",
+        category: "EdTech Tools",
+        source: "Digital Classroom Magazine",
+        date: "2025-11-01",
+        url: "https://link.springer.com/article/10.1007/s10639-023-11632-3",
+        readTime: "5 min read"
+    }
+];
+
+let currentArticleIndex = 0;
+
+function loadNewTechArticle() {
+    const container = document.getElementById('techArticleContainer');
+    const refreshBtn = document.getElementById('refreshArticle');
+    
+    // Show enhanced loading state
+    container.innerHTML = `
+        <div class="text-center py-5">
+            <div class="spinner-grow" style="color: #667eea; width: 3rem; height: 3rem;" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-4" style="color: #667eea; font-weight: 600; font-size: 1.1rem;">
+                <i class="fas fa-sync-alt fa-spin me-2"></i>Loading fresh content...
+            </p>
+        </div>
+    `;
+    
+    // Disable refresh button
+    refreshBtn.disabled = true;
+    
+    // Simulate loading and get next article
+    setTimeout(() => {
+        currentArticleIndex = (currentArticleIndex + 1) % techArticles.length;
+        const article = techArticles[currentArticleIndex];
+        
+        container.innerHTML = `
+            <div class="tech-article-card">
+                <span class="article-badge">
+                    <i class="fas fa-tag me-2"></i>${article.category}
+                </span>
+                <div class="article-meta">
+                    <span><i class="fas fa-building me-2"></i><strong>Source:</strong> ${article.source}</span>
+                    <span><i class="fas fa-calendar-alt me-2"></i><strong>Published:</strong> ${formatDate(article.date)}</span>
+                    <span><i class="fas fa-clock me-2"></i><strong>Read Time:</strong> ${article.readTime} min</span>
+                </div>
+                <h3 class="article-title">${article.title}</h3>
+                <p class="article-description">${article.description}</p>
+                <div class="d-flex justify-content-between align-items-center mt-4">
+                    <a href="${article.url}" target="_blank" rel="noopener noreferrer" class="read-more-btn">
+                        Read Full Article <i class="fas fa-external-link-alt ms-2"></i>
+                    </a>
+                    <span class="article-footer-info">
+                        <i class="fas fa-eye me-2"></i>Stay Informed
+                    </span>
+                </div>
+            </div>
+        `;
+        
+        // Re-enable refresh button
+        refreshBtn.disabled = false;
+        
+        // Add smooth animation
+        container.firstElementChild.style.opacity = '0';
+        container.firstElementChild.style.transform = 'translateY(30px)';
+        setTimeout(() => {
+            container.firstElementChild.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+            container.firstElementChild.style.opacity = '1';
+            container.firstElementChild.style.transform = 'translateY(0)';
+        }, 50);
+    }, 600);
+}
+
+function formatDate(dateString) {
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString('en-US', options);
+}
+
+// Load initial article on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadNewTechArticle();
+    
+    // Auto-refresh article every 30 seconds
+    setInterval(() => {
+        loadNewTechArticle();
+    }, 30000);
+});
+</script>
+{% endblock %}

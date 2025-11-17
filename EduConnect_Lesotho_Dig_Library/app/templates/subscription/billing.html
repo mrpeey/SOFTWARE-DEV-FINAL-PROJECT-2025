@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block title %}Payment - {{ library_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-credit-card me-2"></i>Complete Payment
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <!-- Bill Details -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h5 class="border-bottom pb-2 mb-3">Bill Details</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Description:</strong> {{ billing_record.description }}</p>
+                                    <p><strong>Bill Type:</strong> 
+                                        <span class="badge bg-info">{{ billing_record.billing_type.replace('_', ' ').title() }}</span>
+                                    </p>
+                                    <p><strong>Created Date:</strong> {{ billing_record.created_at.strftime('%B %d, %Y') }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Due Date:</strong> 
+                                        {{ billing_record.due_date.strftime('%B %d, %Y') }}
+                                        {% if billing_record.is_overdue %}
+                                        <span class="badge bg-danger ms-1">{{ billing_record.days_overdue }} days overdue</span>
+                                        {% endif %}
+                                    </p>
+                                    <p><strong>Status:</strong> 
+                                        <span class="badge bg-warning">{{ billing_record.status.title() }}</span>
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="bg-light p-3 rounded">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span class="fs-5"><strong>Total Amount:</strong></span>
+                                            <span class="fs-4 fw-bold text-primary">LSL {{ "%.2f"|format(billing_record.amount) }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Form -->
+                    <form method="POST" action="{{ url_for('subscription.process_payment', billing_id=billing_record.id) }}" id="paymentForm">
+                        {{ csrf_token() }}
+                        
+                        <h5 class="border-bottom pb-2 mb-3">Payment Method</h5>
+                        
+                        <div class="row mb-4">
+                            <div class="col-12">
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="payment_method" id="cash" value="cash" required>
+                                            <label class="form-check-label" for="cash">
+                                                <i class="fas fa-money-bill-wave text-success me-2"></i>
+                                                <strong>Cash Payment</strong>
+                                                <small class="d-block text-muted">Pay at the library counter</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6 mb-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="payment_method" id="mobile_money" value="mobile_money" required>
+                                            <label class="form-check-label" for="mobile_money">
+                                                <i class="fas fa-mobile-alt text-primary me-2"></i>
+                                                <strong>Mobile Money</strong>
+                                                <small class="d-block text-muted">M-Pesa, EcoCash, etc.</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6 mb-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="payment_method" id="bank_transfer" value="bank_transfer" required>
+                                            <label class="form-check-label" for="bank_transfer">
+                                                <i class="fas fa-university text-info me-2"></i>
+                                                <strong>Bank Transfer</strong>
+                                                <small class="d-block text-muted">Direct bank transfer</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-6 mb-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="radio" name="payment_method" id="card" value="card" required disabled>
+                                            <label class="form-check-label text-muted" for="card">
+                                                <i class="fas fa-credit-card text-secondary me-2"></i>
+                                                <strong>Credit/Debit Card</strong>
+                                                <small class="d-block text-muted">Coming soon</small>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Reference Text Box (Always Visible) -->
+                        <div class="mb-4">
+                            <label for="transactionReference" class="form-label">Payment Reference *</label>
+                            <input type="text" class="form-control" id="transactionReference" name="transaction_reference" required placeholder="Enter payment reference number or text">
+                            <small class="form-text text-muted">Enter the transaction/reference number or text for your payment. This will be shown to the admin for verification.</small>
+                        </div>
+
+                        <!-- Terms and Conditions -->
+                        <div class="mb-4">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="agreeTerms" required>
+                                <label class="form-check-label" for="agreeTerms">
+                                    I agree to the <a href="#" data-bs-toggle="modal" data-bs-target="#termsModal">Terms and Conditions</a>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex gap-3">
+                            <button type="submit" class="btn btn-primary btn-lg flex-fill" id="submitPayment">
+                                <i class="fas fa-check me-2"></i>Confirm Payment
+                            </button>
+                            <a href="{{ url_for('subscription.index') }}" class="btn btn-outline-secondary btn-lg">
+                                <i class="fas fa-arrow-left me-2"></i>Back
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Terms and Conditions Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Payment Terms and Conditions</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Payment Policy</h6>
+                <ul>
+                    <li>All payments are non-refundable once processed</li>
+                    <li>Subscription activates immediately upon payment confirmation</li>
+                    <li>Mobile money and bank transfer payments may take 1-2 hours to process</li>
+                    <li>Cash payments are processed immediately at the library counter</li>
+                </ul>
+                
+                <h6>Subscription Terms</h6>
+                <ul>
+                    <li>Subscriptions are valid for the specified duration from activation date</li>
+                    <li>Book borrowing limits are enforced according to your plan</li>
+                    <li>Overdue books may result in additional fees</li>
+                    <li>Subscription benefits are non-transferable</li>
+                </ul>
+                
+                <h6>Contact Information</h6>
+                <p>For payment issues or questions, contact us at:</p>
+                <ul>
+                    <li>Email: billing@library.co.ls</li>
+                    <li>Phone: +266 2812 3456</li>
+                    <li>Visit: Butha-Buthe Library, Main Street</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentMethods = document.querySelectorAll('input[name="payment_method"]');
+    const paymentDetails = document.getElementById('paymentDetails');
+    const submitButton = document.getElementById('submitPayment');
+    
+    paymentMethods.forEach(method => {
+        method.addEventListener('change', function() {
+            showPaymentDetails(this.value);
+        });
+    });
+    
+    function showPaymentDetails(method) {
+        // Hide all payment details
+        document.querySelectorAll('.payment-detail').forEach(detail => {
+            detail.style.display = 'none';
+        });
+        
+        // Show selected payment method details
+        const detailElement = document.getElementById(method + 'Details');
+        if (detailElement) {
+            paymentDetails.style.display = 'block';
+            detailElement.style.display = 'block';
+            
+            // Update button text based on payment method
+            updateSubmitButton(method);
+            
+            // Handle required fields
+            handleRequiredFields(method);
+        }
+    }
+    
+    function updateSubmitButton(method) {
+        const buttonTexts = {
+            'cash': '<i class="fas fa-money-bill-wave me-2"></i>Confirm Cash Payment',
+            'mobile_money': '<i class="fas fa-mobile-alt me-2"></i>Submit Mobile Payment',
+            'bank_transfer': '<i class="fas fa-university me-2"></i>Submit Bank Transfer',
+            'card': '<i class="fas fa-credit-card me-2"></i>Process Card Payment'
+        };
+        
+        submitButton.innerHTML = buttonTexts[method] || '<i class="fas fa-check me-2"></i>Confirm Payment';
+    }
+    
+    function handleRequiredFields(method) {
+        // Reset all transaction reference fields
+        document.querySelectorAll('input[name="transaction_reference"]').forEach(input => {
+            input.required = false;
+        });
+        
+        // Set required for current method if needed
+        if (method === 'mobile_money') {
+            document.getElementById('mobileReference').required = true;
+        } else if (method === 'bank_transfer') {
+            document.getElementById('bankReference').required = true;
+        }
+    }
+    
+    // Form validation
+    document.getElementById('paymentForm').addEventListener('submit', function(e) {
+        const selectedMethod = document.querySelector('input[name="payment_method"]:checked');
+        
+        if (!selectedMethod) {
+            e.preventDefault();
+            alert('Please select a payment method.');
+            return;
+        }
+        
+        if (!document.getElementById('agreeTerms').checked) {
+            e.preventDefault();
+            alert('Please agree to the terms and conditions.');
+            return;
+        }
+        
+        // Additional validation for methods requiring transaction reference
+        if (selectedMethod.value === 'mobile_money') {
+            const ref = document.getElementById('mobileReference').value.trim();
+            if (!ref) {
+                e.preventDefault();
+                alert('Please enter the mobile money transaction reference.');
+                return;
+            }
+        } else if (selectedMethod.value === 'bank_transfer') {
+            const ref = document.getElementById('bankReference').value.trim();
+            if (!ref) {
+                e.preventDefault();
+                alert('Please enter the bank transfer reference number.');
+                return;
+            }
+        }
+        
+        // Confirm payment
+        const amount = '{{ "%.2f"|format(billing_record.amount) }}';
+        const methodText = selectedMethod.nextElementSibling.querySelector('strong').textContent;
+        
+        if (!confirm(`Confirm payment of LSL ${amount} via ${methodText}?`)) {
+            e.preventDefault();
+        }
+    });
+});
+</script>
+{% endblock %}

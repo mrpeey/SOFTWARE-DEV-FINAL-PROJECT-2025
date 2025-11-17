@@ -1,0 +1,415 @@
+{% extends "base.html" %}
+
+{% block title %}Offline Access - {{ library_name }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-4 text-center"><i class="fas fa-cloud-download-alt me-2"></i>What's Available Offline</h1>
+    <div class="row g-4">
+        <!-- Downloaded Books -->
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-book me-2"></i>Downloaded Books <span class="badge bg-light text-primary">{{ books|length }}</span></h5>
+                </div>
+                <div class="card-body">
+                    {% if books %}
+                        <ul class="list-group mb-3">
+                            {% for book in books %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>{{ book.title }}</span>
+                                    <a href="{{ url_for('main.reader_mode', book_id=book.id) }}" class="btn btn-outline-primary btn-sm">Open in Reader Mode</a>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">No books downloaded for offline access yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <!-- Bookmarks & Notes -->
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-bookmark me-2"></i>Bookmarks & Notes</h5>
+                </div>
+                <div class="card-body">
+                    {% if bookmarks %}
+                        <ul class="list-group mb-3">
+                            {% for note in bookmarks %}
+                                <li class="list-group-item">
+                                    <strong>{{ note.book_title }}</strong>: {{ note.content }}
+                                    <span class="text-muted small">(Page {{ note.page }})</span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">No bookmarks or notes saved yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <!-- Search History -->
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="fas fa-search me-2"></i>Search History</h5>
+                </div>
+                <div class="card-body">
+                    {% if search_history %}
+                        <ul class="list-group mb-3">
+                            {% for search in search_history %}
+                                <li class="list-group-item">{{ search.query }} <span class="text-muted small">({{ search.date }})</span></li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted">No search history available.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <!-- Profile Data -->
+        <div class="col-md-6">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-user me-2"></i>Profile Data</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group mb-3">
+                        <li class="list-group-item"><strong>Name:</strong> {{ user.name if user else 'Guest' }}</li>
+                        <li class="list-group-item"><strong>Email:</strong> {{ user.email if user else 'N/A' }}</li>
+                        <li class="list-group-item"><strong>Preferences:</strong> {{ user.preferences if user else 'N/A' }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <!-- Storage Information -->
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-hdd me-2"></i>Storage Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <strong>Storage Used:</strong> <span class="storage-js-used">{{ storage_used|default('0') }}</span> MB / <span class="storage-js-total">{{ storage_total|default('0') }}</span> MB
+                    </div>
+                    <div class="progress mb-2" style="height: 24px;">
+                        <div class="progress-bar bg-success storage-js-bar" role="progressbar" style="width: 0%; transition: width 0.6s; position: relative;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                            <span class="storage-js-percent" style="position: absolute; left: 50%; top: 0; transform: translateX(-50%); color: #fff; font-weight: bold; width: 100%; text-align: center;">0%</span>
+                        </div>
+                    </div>
+                    <small class="text-muted">Device/Browser: {{ device_info|default('Unknown') }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<!-- Clear Data Modal -->
+<div class="modal fade" id="clearDataModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Clear Offline Data</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to clear all offline data?</p>
+                <p><strong>This will remove:</strong></p>
+                <ul>
+                    <li>All downloaded books</li>
+                    <li>Reading progress and bookmarks</li>
+                    <li>Cached search results</li>
+                    <li>Offline preferences</li>
+                </ul>
+                <p class="text-danger"><small>This action cannot be undone.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="confirmClearData()">
+                    <i class="fas fa-trash me-2"></i>Clear All Data
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.text-purple {
+    color: #6f42c1 !important;
+}
+
+.tip {
+    padding-left: 1rem;
+    border-left: 3px solid #e9ecef;
+}
+.tip:last-child {
+    border-left: 3px solid transparent;
+}
+.card:hover {
+    transform: translateY(-2px);
+    transition: transform 0.2s ease-in-out;
+}
+.book-card {
+    position: relative;
+}
+.offline-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+}
+.progress {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    background: #e9ecef;
+    position: relative;
+    overflow: hidden;
+}
+.progress-bar.storage-js-bar {
+    border-radius: 12px;
+    background: linear-gradient(90deg, #28a745 0%, #218838 100%);
+    box-shadow: 0 1px 4px rgba(40,167,69,0.15);
+    position: relative;
+    min-width: 2em;
+}
+.storage-js-percent {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+    color: #fff;
+    font-weight: bold;
+    width: 100%;
+    text-align: center;
+    line-height: 24px;
+    font-size: 1rem;
+    pointer-events: none;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Check connection status
+function checkConnectionStatus() {
+    const statusDiv = document.getElementById('connection-status');
+    const statusText = document.getElementById('status-text');
+    
+    if (navigator.onLine) {
+        statusDiv.className = 'alert alert-success text-center';
+        statusText.innerHTML = '<i class="fas fa-wifi me-2"></i>Connected to internet';
+    } else {
+        statusDiv.className = 'alert alert-warning text-center';
+        statusText.innerHTML = '<i class="fas fa-wifi-slash me-2"></i>Offline mode - using cached data';
+    }
+}
+
+// Load downloaded books
+function loadDownloadedBooks() {
+    // This would typically load from IndexedDB or localStorage
+    const downloadedBooks = JSON.parse(localStorage.getItem('downloadedBooks') || '[]');
+    const container = document.getElementById('downloaded-books');
+    const noDownloads = document.getElementById('no-downloads');
+    const countBadge = document.getElementById('downloaded-count');
+    
+    countBadge.textContent = downloadedBooks.length;
+    
+    if (downloadedBooks.length === 0) {
+        container.style.display = 'none';
+        noDownloads.style.display = 'block';
+        return;
+    }
+    
+    container.style.display = 'flex';
+    noDownloads.style.display = 'none';
+    
+    container.innerHTML = downloadedBooks.map(book => `
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100 shadow-sm book-card">
+                <span class="badge bg-success offline-badge">
+                    <i class="fas fa-download me-1"></i>Offline
+                </span>
+                <div class="card-body">
+                    <h6 class="card-title">${book.title}</h6>
+                    <p class="card-text text-muted small">${book.author}</p>
+                    <div class="mt-auto">
+                        <button class="btn btn-primary btn-sm w-100 mb-2" onclick="openOfflineBook('${book.id}')">
+                            <i class="fas fa-book-open me-1"></i>Read Offline
+                        </button>
+                        <button class="btn btn-outline-danger btn-sm w-100" onclick="removeDownload('${book.id}')">
+                            <i class="fas fa-trash me-1"></i>Remove
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Calculate storage usage and update progress bar
+function calculateStorageUsage() {
+    if ('storage' in navigator && 'estimate' in navigator.storage) {
+        navigator.storage.estimate().then(estimate => {
+            const used = estimate.usage || 0;
+            const quota = estimate.quota || 0;
+            const usedMB = (used / (1024 * 1024)).toFixed(2);
+            const quotaMB = (quota / (1024 * 1024)).toFixed(2);
+            const percentage = quota > 0 ? Math.round((used / quota) * 100) : 0;
+
+            document.querySelectorAll('.storage-js-used').forEach(el => el.textContent = usedMB);
+            document.querySelectorAll('.storage-js-total').forEach(el => el.textContent = quotaMB);
+
+            document.querySelectorAll('.storage-js-bar').forEach(bar => {
+                bar.style.width = percentage + '%';
+                bar.setAttribute('aria-valuenow', percentage);
+            });
+            document.querySelectorAll('.storage-js-percent').forEach(percentEl => {
+                percentEl.textContent = percentage + '%';
+            });
+        });
+    } else {
+        document.querySelectorAll('.storage-js-used').forEach(el => el.textContent = 'Not available');
+        document.querySelectorAll('.storage-js-total').forEach(el => el.textContent = 'Not available');
+        document.querySelectorAll('.storage-js-bar').forEach(bar => {
+            bar.style.width = '0%';
+            bar.setAttribute('aria-valuenow', 0);
+        });
+        document.querySelectorAll('.storage-js-percent').forEach(percentEl => {
+            percentEl.textContent = '0%';
+        });
+    }
+}
+
+// Refresh offline data
+function refreshOfflineData() {
+    checkConnectionStatus();
+    loadDownloadedBooks();
+    calculateStorageUsage();
+    
+    // Show success message
+    const alert = document.createElement('div');
+    alert.className = 'alert alert-success alert-dismissible fade show position-fixed';
+    alert.style.top = '20px';
+    alert.style.right = '20px';
+    alert.style.zIndex = '9999';
+    alert.innerHTML = `
+        <i class="fas fa-check me-2"></i>Offline data refreshed successfully
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alert);
+    
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.parentNode.removeChild(alert);
+        }
+    }, 3000);
+}
+
+// Clear offline data
+function clearOfflineData() {
+    const modal = new bootstrap.Modal(document.getElementById('clearDataModal'));
+    modal.show();
+}
+
+function confirmClearData() {
+    // Clear localStorage
+    localStorage.removeItem('downloadedBooks');
+    localStorage.removeItem('offlineReadingProgress');
+    localStorage.removeItem('offlineBookmarks');
+    localStorage.removeItem('offlineSearchHistory');
+    
+    // Clear IndexedDB if supported
+    if ('indexedDB' in window) {
+        indexedDB.deleteDatabase('LibraryOfflineData');
+    }
+    
+    // Clear Cache API if supported
+    if ('caches' in window) {
+        caches.keys().then(names => {
+            names.forEach(name => {
+                if (name.includes('library')) {
+                    caches.delete(name);
+                }
+            });
+        });
+    }
+    
+    // Close modal and refresh
+    const modal = bootstrap.Modal.getInstance(document.getElementById('clearDataModal'));
+    modal.hide();
+    
+    setTimeout(() => {
+        refreshOfflineData();
+        
+        // Show success message
+        const alert = document.createElement('div');
+        alert.className = 'alert alert-info alert-dismissible fade show position-fixed';
+        alert.style.top = '20px';
+        alert.style.right = '20px';
+        alert.style.zIndex = '9999';
+        alert.innerHTML = `
+            <i class="fas fa-trash me-2"></i>All offline data cleared successfully
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(alert);
+        
+        setTimeout(() => {
+            if (alert.parentNode) {
+                alert.parentNode.removeChild(alert);
+            }
+        }, 3000);
+    }, 500);
+}
+
+// Open offline book
+function openOfflineBook(bookId) {
+    // This would typically open from cached data
+    window.location.href = `/books/${bookId}?offline=true`;
+}
+
+// Remove download
+function removeDownload(bookId) {
+    const downloadedBooks = JSON.parse(localStorage.getItem('downloadedBooks') || '[]');
+    const updatedBooks = downloadedBooks.filter(book => book.id !== bookId);
+    localStorage.setItem('downloadedBooks', JSON.stringify(updatedBooks));
+    
+    loadDownloadedBooks();
+    calculateStorageUsage();
+}
+
+// Event listeners
+window.addEventListener('online', checkConnectionStatus);
+window.addEventListener('offline', checkConnectionStatus);
+
+// Initialize page
+document.addEventListener('DOMContentLoaded', function() {
+    checkConnectionStatus();
+    loadDownloadedBooks();
+    calculateStorageUsage();
+});
+
+if ('storage' in navigator && 'estimate' in navigator.storage) {
+  navigator.storage.estimate().then(function(estimate) {
+    var usedMB = (estimate.usage / (1024 * 1024)).toFixed(2);
+    var quotaMB = (estimate.quota / (1024 * 1024)).toFixed(2);
+    var percent = Math.round((estimate.usage / estimate.quota) * 100);
+    document.querySelectorAll('.storage-js-used').forEach(function(el) {
+      el.textContent = usedMB;
+    });
+    document.querySelectorAll('.storage-js-total').forEach(function(el) {
+      el.textContent = quotaMB;
+    });
+    document.querySelectorAll('.storage-js-percent').forEach(function(el) {
+      el.textContent = percent + '%';
+    });
+    document.querySelectorAll('.storage-js-bar').forEach(function(el) {
+      el.style.width = percent + '%';
+      el.setAttribute('aria-valuenow', percent);
+    });
+  });
+}
+</script>
+{% endblock %}

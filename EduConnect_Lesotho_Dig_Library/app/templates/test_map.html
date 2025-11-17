@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Map Display</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            border: 2px solid #ddd;
+            margin: 20px 0;
+        }
+        h2 {
+            color: #333;
+            border-bottom: 2px solid #4CAF50;
+            padding-bottom: 10px;
+        }
+    </style>
+    {% block extra_css %}
+<style>
+.text-purple {
+    color: #6f42c1 !important;
+}
+
+.tip {
+    padding-left: 1rem;
+    border-left: 3px solid #e9ecef;
+}
+.tip:last-child {
+    border-left: 3px solid transparent;
+}
+.card:hover {
+    transform: translateY(-2px);
+    transition: transform 0.2s ease-in-out;
+}
+.book-card {
+    position: relative;
+}
+.offline-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 10;
+}
+.progress {
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    background: #e9ecef;
+    position: relative;
+    overflow: hidden;
+}
+.progress-bar.storage-js-bar {
+    border-radius: 12px;
+    background: linear-gradient(90deg, #28a745 0%, #218838 100%);
+    box-shadow: 0 1px 4px rgba(40,167,69,0.15);
+    position: relative;
+    min-width: 2em;
+}
+.storage-js-percent {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    transform: translateX(-50%);
+    color: #fff;
+    font-weight: bold;
+    width: 100%;
+    text-align: center;
+    line-height: 24px;
+    font-size: 1rem;
+    pointer-events: none;
+}
+</style>
+    {% endblock %}
+</head>
+<body>
+    <div class="container">
+        <h1>Map Display Test Page</h1>
+        
+        <h2>Test 1: Real Geographical Map (New)</h2>
+        <img src="{{ url_for('static', filename='images/lesotho_real_outline.svg') }}" alt="Real Map">
+        
+        <h2>Test 2: Custom Sock-Shaped Map</h2>
+        <img src="{{ url_for('static', filename='lesotho_map_accurate.svg') }}" alt="Custom Map">
+        
+        <h2>Test 3: Direct SVG Path</h2>
+        <img src="/static/images/lesotho_real_outline.svg" alt="Direct Path">
+        
+        <hr>
+        <p><strong>File paths being tested:</strong></p>
+        <ul>
+            <li>{{ url_for('static', filename='images/lesotho_real_outline.svg') }}</li>
+            <li>{{ url_for('static', filename='images/lesotho_map_accurate.svg') }}</li>
+        </ul>
+    </div>
+</body>
+</html>

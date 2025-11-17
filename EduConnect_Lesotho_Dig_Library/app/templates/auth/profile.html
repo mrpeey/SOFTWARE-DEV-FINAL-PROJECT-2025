@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - {{ library_name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Profile Header -->
+            <div class="card shadow mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user me-2"></i>User Profile
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 text-center">
+                            <div class="profile-avatar mb-3">
+                                {% if current_user.profile_image %}
+                                    <img src="{{ url_for('static', filename='uploads/profiles/' + current_user.profile_image) }}" 
+                                         class="rounded-circle" 
+                                         alt="Profile" 
+                                         style="width: 150px; height: 150px; object-fit: cover; border: 4px solid #007bff;">
+                                {% else %}
+                                    <i class="fas fa-user-circle fa-5x text-muted"></i>
+                                {% endif %}
+                            </div>
+                            <h5>{{ current_user.get_full_name() }}</h5>
+                            <p class="text-muted">{{ current_user.role.role_name.title() }}</p>
+                        </div>
+                        <div class="col-md-8">
+                            <table class="table table-borderless">
+                                <tbody>
+                                    <tr>
+                                        <td><strong>Username:</strong></td>
+                                        <td>{{ current_user.username }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Email:</strong></td>
+                                        <td>{{ current_user.email }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Full Name:</strong></td>
+                                        <td>{{ current_user.first_name }} {{ current_user.last_name }}</td>
+                                    </tr>
+                                    {% if current_user.phone %}
+                                    <tr>
+                                        <td><strong>Phone:</strong></td>
+                                        <td>{{ current_user.phone }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    {% if current_user.district %}
+                                    <tr>
+                                        <td><strong>District:</strong></td>
+                                        <td>{{ current_user.district }}</td>
+                                    </tr>
+                                    {% endif %}
+                                    <tr>
+                                        <td><strong>Member Since:</strong></td>
+                                        <td>{{ current_user.created_at.strftime('%B %d, %Y') }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Status:</strong></td>
+                                        <td>
+                                            {% if current_user.is_active %}
+                                                <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Inactive</span>
+                                            {% endif %}
+                                            {% if current_user.email_verified %}
+                                                <span class="badge bg-primary">Verified</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <div class="d-flex gap-2">
+                        <a href="{{ url_for('auth.edit_profile') }}" class="btn btn-primary">
+                            <i class="fas fa-edit me-1"></i>Edit Profile
+                        </a>
+                        <a href="{{ url_for('auth.change_password') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-key me-1"></i>Change Password
+                        </a>
+                        <a href="{{ url_for('books.my_books') }}" class="btn btn-outline-info">
+                            <i class="fas fa-books me-1"></i>My Books
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Summary -->
+            <div class="card shadow">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>Activity Summary
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-3 col-6 mb-3">
+                            <div class="h3 text-primary">{{ borrowed_books }}</div>
+                            <small class="text-muted">Books Borrowed</small>
+                        </div>
+                        <div class="col-md-3 col-6 mb-3">
+                            <div class="h3 text-success">{{ downloaded_books }}</div>
+                            <small class="text-muted">Books Downloaded</small>
+                        </div>
+                        <div class="col-md-3 col-6 mb-3">
+                            <div class="h3 text-warning">{{ reviews_count }}</div>
+                            <small class="text-muted">Reviews Written</small>
+                        </div>
+                        <div class="col-md-3 col-6 mb-3">
+                            <div class="h3 text-info">{{ notifications_count }}</div>
+                            <small class="text-muted">Notifications</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

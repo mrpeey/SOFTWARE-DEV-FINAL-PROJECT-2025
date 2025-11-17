@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Document Summarization & Search{% endblock %}
+{% block content %}
+<div class="container py-4">
+    <h2 class="mb-3">Document Summarization & Semantic Search</h2>
+    <form id="summarize-form" class="mb-4">
+        <div class="mb-3">
+            <label for="doc-text" class="form-label">Paste Document/Text</label>
+            <textarea id="doc-text" class="form-control" rows="6" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-success">Summarize</button>
+    </form>
+    <div id="summary-result" class="mb-4"></div>
+    <form id="search-form">
+        <div class="mb-3">
+            <label for="search-query" class="form-label">Semantic Search Query</label>
+            <input type="text" id="search-query" class="form-control" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Search</button>
+    </form>
+    <div id="search-result"></div>
+</div>
+<script>
+document.getElementById('summarize-form').onsubmit = async function(e) {
+    e.preventDefault();
+    const text = document.getElementById('doc-text').value.trim();
+    if (!text) return;
+    const resultDiv = document.getElementById('summary-result');
+    resultDiv.innerHTML = '<span class="text-muted">Summarizing...</span>';
+    try {
+        const res = await fetch('/api/summarize', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text })
+        });
+        const data = await res.json();
+        resultDiv.innerHTML = `<div class='alert alert-success'><strong>Summary:</strong> ${data.summary}</div>`;
+    } catch (err) {
+        resultDiv.innerHTML = '<div class="alert alert-danger">Error summarizing document.</div>';
+    }
+};
+document.getElementById('search-form').onsubmit = async function(e) {
+    e.preventDefault();
+    const query = document.getElementById('search-query').value.trim();
+    if (!query) return;
+    const resultDiv = document.getElementById('search-result');
+    resultDiv.innerHTML = '<span class="text-muted">Searching...</span>';
+    try {
+        const res = await fetch('/api/semantic-search', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ query })
+        });
+        const data = await res.json();
+        resultDiv.innerHTML = `<div class='alert alert-info'><strong>Results:</strong><br>${data.results.join('<br>')}</div>`;
+    } catch (err) {
+        resultDiv.innerHTML = '<div class="alert alert-danger">Error searching documents.</div>';
+    }
+};
+</script>
+{% endblock %}

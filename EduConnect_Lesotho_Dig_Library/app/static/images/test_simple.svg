@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600">
+    <!-- Simple background -->
+    <rect width="800" height="600" fill="#e8f5e9"/>
+    
+    <!-- Test text -->
+    <text x="400" y="50" font-size="30" font-weight="bold" text-anchor="middle" fill="#2e7d32">
+        LESOTHO MAP TEST
+    </text>
+    
+    <!-- Simple shape to test rendering -->
+    <circle cx="400" cy="300" r="100" fill="#4CAF50" stroke="#1b5e20" stroke-width="3"/>
+    
+    <!-- Test text inside -->
+    <text x="400" y="310" font-size="20" text-anchor="middle" fill="white">
+        If you see this, SVG works!
+    </text>
+</svg>
