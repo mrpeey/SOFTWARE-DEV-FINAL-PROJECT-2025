@@ -408,9 +408,13 @@ document.getElementById('listView').addEventListener('click', function() {
 
 // On page load, set view mode from localStorage
 window.addEventListener('DOMContentLoaded', function() {
-    // Always set grid view as default on page load
-    setViewMode('grid');
-    localStorage.setItem('booksViewMode', 'grid');
+    // Check localStorage for last selected view mode
+    var mode = localStorage.getItem('booksViewMode');
+    if (mode === 'list') {
+        setViewMode('list');
+    } else {
+        setViewMode('grid');
+    }
 });
 
 // AI Chat Assistant functionality

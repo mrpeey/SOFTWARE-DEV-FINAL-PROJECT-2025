@@ -1,6 +1,26 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="container mt-4">
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white">
+          <h3 class="mb-0">Recommended Reading</h3>
+        </div>
+        <div class="card-body">
+          <ul class="list-group list-group-flush">
+            {% for rec in book.recommended_reading if book.recommended_reading %}
+              <li class="list-group-item">
+                <a href="{{ url_for('main.book_detail', book_id=rec.id) }}">{{ rec.title }} by {{ rec.author }}</a>
+              </li>
+            {% else %}
+              <li class="list-group-item text-muted">No recommended reading for this book.</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
   <div class="card shadow-lg mb-4">
     <div class="row g-0">
       <div class="col-md-4 text-center p-4">
@@ -67,12 +87,59 @@
             <span class="ms-2">({{ book.average_rating }}/5, {{ book.review_count }} reviews)</span>
           </div>
           <div class="mt-3">
+            <a href="{{ url_for('main.index') }}" class="btn btn-secondary me-2">Home</a>
+            <a href="{{ url_for('books.my_books') }}" class="btn btn-primary me-2">My Books</a>
             {% if can_borrow %}
-                 <a href="{{ url_for('books.borrow_book', book_id=book.id) }}" class="btn btn-primary me-2">Book</a>
+                 <a href="{{ url_for('books.borrow_confirm', book_id=book.id) }}" class="btn btn-success me-2">Borrow</a>
             {% else %}
-              <button class="btn btn-secondary me-2" disabled title="{{ borrow_msg }}">Book</button>
+              <button class="btn btn-secondary me-2" disabled title="{{ borrow_msg }}">Borrow</button>
             {% endif %}
-            <button class="btn btn-outline-info me-2" onclick="shareBook()">Share</button>
+            <button type="button" class="btn btn-info me-2" id="shareBtn" data-bs-toggle="modal" data-bs-target="#shareModal">
+              <i class="fas fa-share-alt me-1"></i>Share
+            </button>
+            <!-- Share Modal -->
+            <div class="modal fade" id="shareModal" tabindex="-1" aria-labelledby="shareModalLabel" aria-hidden="true">
+              <div class="modal-dialog">
+                <div class="modal-content">
+                  <div class="modal-header">
+                    <h5 class="modal-title" id="shareModalLabel">Share this Book</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                  </div>
+                  <div class="modal-body">
+                    <p>Share this book using:</p>
+                    <div class="d-flex flex-column gap-2">
+                      <a id="shareEmail" class="btn btn-outline-primary" target="_blank"><i class="fas fa-envelope me-1"></i>Email</a>
+                      <a id="shareWhatsApp" class="btn btn-outline-success" target="_blank"><i class="fab fa-whatsapp me-1"></i>WhatsApp</a>
+                      <a id="shareFacebook" class="btn btn-outline-info" target="_blank"><i class="fab fa-facebook me-1"></i>Facebook</a>
+                      <a id="shareCopy" class="btn btn-outline-secondary"><i class="fas fa-link me-1"></i>Copy Link</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <script>
+      <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Only set up share modal if it exists
+        var shareEmail = document.getElementById('shareEmail');
+        var shareWhatsApp = document.getElementById('shareWhatsApp');
+        var shareFacebook = document.getElementById('shareFacebook');
+        var shareCopy = document.getElementById('shareCopy');
+        var bookTitleElem = document.querySelector('h3.card-title, h2');
+        if (shareEmail && shareWhatsApp && shareFacebook && shareCopy && bookTitleElem) {
+          var bookUrl = window.location.href;
+          var bookTitle = bookTitleElem.innerText;
+          shareEmail.href = `mailto:?subject=Check out this book: ${bookTitle}&body=View it here: ${bookUrl}`;
+          shareWhatsApp.href = `https://wa.me/?text=Check out this book: ${bookTitle} - ${bookUrl}`;
+          shareFacebook.href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(bookUrl)}`;
+          shareCopy.onclick = function() {
+            navigator.clipboard.writeText(bookUrl);
+            this.innerText = 'Copied!';
+            setTimeout(() => { this.innerHTML = '<i class="fas fa-link me-1"></i>Copy Link'; }, 1500);
+          };
+        }
+      });
+      </script>
             {% if book.is_digital and can_download %}
               <a href="{{ url_for('books.download_book', book_id=book.id) }}" class="btn btn-success">Download</a>
             {% elif book.is_digital %}

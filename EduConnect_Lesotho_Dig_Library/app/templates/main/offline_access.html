@@ -13,17 +13,37 @@
                     <h5 class="mb-0"><i class="fas fa-book me-2"></i>Downloaded Books <span class="badge bg-light text-primary">{{ books|length }}</span></h5>
                 </div>
                 <div class="card-body">
-                    {% if books %}
+                    <div class="mb-2">
+                        <strong>Your Downloads:</strong> <span class="badge bg-primary">{{ download_count }}</span>
+                    </div>
+                    {% if download_links %}
                         <ul class="list-group mb-3">
-                            {% for book in books %}
+                            {% for d in download_links %}
                                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                                    <span>{{ book.title }}</span>
-                                    <a href="{{ url_for('main.reader_mode', book_id=book.id) }}" class="btn btn-outline-primary btn-sm">Open in Reader Mode</a>
+                                    <div class="d-flex align-items-center gap-3">
+                                        {% set book = books[loop.index0] %}
+                                        {% if book.cover_image %}
+                                            <img src="{{ url_for('static', filename=book.cover_image) }}" alt="Cover" style="height:48px;width:auto;object-fit:cover;border-radius:4px;">
+                                        {% elif book.file_format == 'svg' %}
+                                            <img src="{{ url_for('static', filename=book.file_path) }}" alt="SVG" style="height:48px;width:auto;object-fit:cover;">
+                                        {% else %}
+                                            <img src="{{ url_for('static', filename='images/default_cover.svg') }}" alt="Default Cover" style="height:48px;width:auto;object-fit:cover;border-radius:4px;">
+                                        {% endif %}
+                                        <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="fw-bold text-decoration-none">{{ d.book_title }}</a>
+                                    </div>
+                                    <div class="d-flex gap-2">
+                                        {% if d.file_path %}
+                                            <a href="{{ url_for('offline.serve_downloaded_file', download_id=d.id) }}" class="btn btn-outline-primary btn-sm">Download</a>
+                                        {% endif %}
+                                        <form method="POST" action="{{ url_for('offline.delete_download', download_id=d.id) }}" style="display:inline;">
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Delete this download?')">Delete</button>
+                                        </form>
+                                    </div>
                                 </li>
                             {% endfor %}
                         </ul>
                     {% else %}
-                        <p class="text-muted">No books downloaded for offline access yet.</p>
+                        <p class="text-muted">You have not downloaded any books for offline access yet.</p>
                     {% endif %}
                 </div>
             </div>

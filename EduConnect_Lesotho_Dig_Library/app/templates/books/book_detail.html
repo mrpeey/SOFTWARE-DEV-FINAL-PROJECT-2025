@@ -33,9 +33,9 @@
             <a href="{{ url_for('main.add_review', book_id=book.id) }}" class="btn btn-warning">
                 <i class="fas fa-star me-1"></i>Review Book
             </a>
-                <button type="button" class="btn btn-info" id="shareBtn">
-                    <i class="fas fa-share-alt me-1"></i>Share
-                </button>
+            <button type="button" class="btn btn-info" id="shareBtn" data-bs-toggle="modal" data-bs-target="#shareModal">
+                <i class="fas fa-share-alt me-1"></i>Share
+            </button>
         </div>
     </div>
     <div class="row mt-4">
@@ -58,6 +58,23 @@
                     <a id="shareCopy" class="btn btn-outline-secondary"><i class="fas fa-link me-1"></i>Copy Link</a>
                 </div>
             </div>
+        </div>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var bookUrl = window.location.href;
+    var bookTitle = document.querySelector('h2').innerText;
+    document.getElementById('shareEmail').href = `mailto:?subject=Check out this book: ${bookTitle}&body=View it here: ${bookUrl}`;
+    document.getElementById('shareWhatsApp').href = `https://wa.me/?text=Check out this book: ${bookTitle} - ${bookUrl}`;
+    document.getElementById('shareFacebook').href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(bookUrl)}`;
+    document.getElementById('shareCopy').onclick = function() {
+        navigator.clipboard.writeText(bookUrl);
+        this.innerText = 'Copied!';
+        setTimeout(() => { this.innerHTML = '<i class="fas fa-link me-1"></i>Copy Link'; }, 1500);
+    };
+});
+</script>
         </div>
     </div>
 </div>

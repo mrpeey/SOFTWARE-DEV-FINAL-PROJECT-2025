@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Pending Reviews - Admin{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4"><i class="fas fa-check-circle text-info me-2"></i>Pending Reviews</h2>
+    {% if reviews %}
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle">
+            <thead class="table-info">
+                <tr>
+                    <th>Book</th>
+                    <th>User</th>
+                    <th>Title</th>
+                    <th>Content</th>
+                    <th>Rating</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for review in reviews %}
+                <tr>
+                    <td>{{ review.book.title }}</td>
+                    <td>{{ review.user_id }}</td>
+                    <td>{{ review.title }}</td>
+                    <td>{{ review.content }}</td>
+                    <td>{{ review.rating }}</td>
+                    <td>{{ review.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>
+                        <form method="POST" action="{{ url_for('admin.approve_review', review_id=review.id) }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                            <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-check"></i> Approve</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="alert alert-info">No pending reviews to approve.</div>
+    {% endif %}
+</div>
+{% endblock %}

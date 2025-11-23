@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mt-5">
+    <h2>Borrow Confirmation</h2>
+    {% if not can_borrow %}
+        <div class="alert alert-warning">
+            {% if is_admin %}
+                <p>Admin users do not need a paid subscription to borrow books.</p>
+            {% else %}
+                <p>Your subscription is not active or payment is pending. Please pay your subscription to borrow this book.</p>
+            {% endif %}
+        </div>
+        <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Back to Home</a>
+    {% else %}
+        <div class="alert alert-success">
+            <p>You are eligible to borrow this book.</p>
+        </div>
+        <form method="post">
+            <button type="submit" class="btn btn-primary">Confirm Borrow</button>
+            <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="btn btn-secondary">Cancel</a>
+        </form>
+    {% endif %}
+</div>
+{% endblock %}

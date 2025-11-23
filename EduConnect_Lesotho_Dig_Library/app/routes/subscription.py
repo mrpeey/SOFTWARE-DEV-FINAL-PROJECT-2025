@@ -91,8 +91,11 @@ def billing(billing_id):
         user_id=current_user.id
     ).first_or_404()
     
+    from app.forms import PaymentForm
+    form = PaymentForm()
     return render_template('subscription/billing.html',
-                         billing_record=billing_record)
+                         billing_record=billing_record,
+                         form=form)
 
 @subscription_bp.route('/pay/<int:billing_id>', methods=['POST'])
 @login_required
@@ -156,10 +159,21 @@ def billing_history():
         page=page, per_page=per_page, error_out=False
     )
     billing_records = pagination.items
-    
+
+    # Calculate summary totals
+    from sqlalchemy import func
+    total_paid = BillingRecord.query.filter_by(user_id=current_user.id, status='paid').with_entities(func.sum(BillingRecord.amount)).scalar() or 0
+    total_pending = BillingRecord.query.filter_by(user_id=current_user.id, status='pending').with_entities(func.sum(BillingRecord.amount)).scalar() or 0
+    total_overdue = BillingRecord.query.filter_by(user_id=current_user.id, status='overdue').with_entities(func.sum(BillingRecord.amount)).scalar() or 0
+    summary = type('Summary', (), {})()
+    summary.total_paid = total_paid
+    summary.total_pending = total_pending
+    summary.total_overdue = total_overdue
+
     return render_template('subscription/history.html',
                          billing_records=billing_records,
-                         pagination=pagination)
+                         pagination=pagination,
+                         summary=summary)
 
 @subscription_bp.route('/cancel', methods=['GET', 'POST'])
 @login_required

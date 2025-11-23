@@ -1,4 +1,3 @@
-
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, send_file, current_app
 from flask_login import login_required, current_user
 from app import db
@@ -13,6 +12,68 @@ import os
 from datetime import datetime, date, timedelta
 
 books_bp = Blueprint('books', __name__)
+
+@books_bp.route('/borrow/confirm/<int:book_id>', methods=['GET', 'POST'])
+@login_required
+def borrow_confirm(book_id):
+    """Borrow confirmation page with subscription check and admin exemption. Applies borrowing logic directly."""
+    book = Book.query.get_or_404(book_id)
+    is_admin = current_user.is_admin() if hasattr(current_user, 'is_admin') else False
+    can_borrow, borrow_msg = book.can_be_borrowed_by(current_user)
+    # Collect detailed error reasons
+    error_details = []
+    if not book.is_active:
+        error_details.append('Book is not active.')
+    if not book.is_available():
+        error_details.append('Book is not available for borrowing.')
+    if hasattr(current_user, 'has_overdue_books') and current_user.has_overdue_books():
+        error_details.append('You have overdue books. Please return them first.')
+    if hasattr(current_user, 'get_total_fines') and current_user.get_total_fines() > 0:
+        error_details.append(f'You have unpaid fines: LSL {current_user.get_total_fines():.2f}')
+    if hasattr(current_user, 'can_borrow_more') and not current_user.can_borrow_more():
+        error_details.append('You have reached your borrowing limit.')
+    if hasattr(current_user, 'has_active_subscription') and not current_user.has_active_subscription() and not current_user.is_admin():
+        error_details.append('You do not have an active subscription.')
+    if request.method == 'POST':
+        current_app.logger.info(f"POST received on borrow_confirm for book_id={book_id}, user_id={current_user.id}")
+        if can_borrow:
+            current_app.logger.info(f"User {current_user.id} is eligible to borrow book {book_id}")
+            if not book.is_available():
+                current_app.logger.warning(f"Book {book_id} is not available for borrowing.")
+                flash('This book is not available for borrowing.', 'error')
+                return redirect(url_for('main.book_detail', book_id=book.id))
+            librarian = UserRole.query.filter_by(role_name='librarian').first()
+            if not librarian:
+                current_app.logger.warning("No librarian available to process the borrowing request.")
+                flash('No librarian available to process the borrowing request.', 'error')
+                return redirect(url_for('main.book_detail', book_id=book.id))
+            borrowing_days = current_app.config.get('DEFAULT_BORROWING_DAYS', 14)
+            due_date = date.today() + timedelta(days=borrowing_days)
+            transaction = BorrowingTransaction(
+                user_id=current_user.id,
+                book_id=book.id,
+                due_date=due_date,
+                librarian_id=librarian.id,
+                status='pending'
+            )
+            try:
+                db.session.add(transaction)
+                db.session.commit()
+                current_app.logger.info(f"Borrowing transaction created for user {current_user.id}, book {book_id}")
+                flash(f'You have successfully borrowed "{book.title}". Due date: {due_date.strftime("%Y-%m-%d")}', 'success')
+            except Exception as e:
+                db.session.rollback()
+                current_app.logger.error(f'Borrowing error: {str(e)}')
+                flash('An error occurred while borrowing the book. Please try again.', 'error')
+            return redirect(url_for('main.book_detail', book_id=book.id))
+        else:
+            current_app.logger.info(f"User {current_user.id} is NOT eligible to borrow book {book_id}: {borrow_msg}")
+            detailed_message = borrow_msg or 'You are not eligible to borrow this book.'
+            if error_details:
+                detailed_message += ' Reasons: ' + '; '.join(error_details)
+            flash(detailed_message, 'error')
+            return redirect(url_for('books.borrow_confirm', book_id=book.id))
+    return render_template('books/borrow_confirm.html', book=book, can_borrow=can_borrow, is_admin=is_admin)
 # Temporary debug route to check cover_image for book ID 5
 @books_bp.route('/debug_cover/5')
 @login_required
@@ -91,8 +152,11 @@ def borrow_book(book_id):
 @books_bp.route('/review/<int:book_id>/edit/<int:review_id>', methods=['GET', 'POST'])
 @login_required
 def edit_review(book_id, review_id):
-    review = BookReview.query.filter_by(id=review_id, book_id=book_id, user_id=current_user.id).first_or_404()
+    review = BookReview.query.filter_by(id=review_id, book_id=book_id).first_or_404()
     book = Book.query.get_or_404(book_id)
+    from app.forms import CSRFOnlyForm
+    form = CSRFOnlyForm()
+    is_admin = hasattr(current_user, 'is_admin') and current_user.is_admin()
     if request.method == 'POST':
         rating = request.form.get('rating', type=int)
         title = request.form.get('title', '').strip()
@@ -100,6 +164,12 @@ def edit_review(book_id, review_id):
         reading_status = request.form.get('reading_status', '').strip()
         tags = request.form.get('tags', '').strip()
         is_anonymous = bool(request.form.get('is_anonymous'))
+        # Admin approval logic
+        if is_admin and 'approve_review' in request.form:
+            review.is_approved = True
+            db.session.commit()
+            flash('Review approved by admin.', 'success')
+            return redirect(url_for('main.book_detail', book_id=book_id))
         if not rating or rating < 1 or rating > 5:
             flash('Please provide a rating between 1 and 5 stars.', 'error')
             return render_template('books/review.html', book=book, existing_review=review)
@@ -122,7 +192,7 @@ def edit_review(book_id, review_id):
             db.session.rollback()
             flash('An error occurred while updating your review.', 'error')
             current_app.logger.error(f'Review update error: {str(e)}')
-    return render_template('books/review.html', book=book, existing_review=review)
+    return render_template('books/review.html', book=book, existing_review=review, form=form, is_admin=is_admin)
 
 # Delete review route (with review_id)
 @books_bp.route('/review/<int:book_id>/delete/<int:review_id>', methods=['POST'])
@@ -364,38 +434,32 @@ def read_book(book_id):
 @login_required
 def review_book(book_id):
     """Add or edit a book review"""
+
+    from app.forms import CSRFOnlyForm
     book = Book.query.get_or_404(book_id)
-    
     # Check if user has already reviewed this book
     existing_review = BookReview.query.filter_by(
         user_id=current_user.id,
         book_id=book_id
     ).first()
-    
+    form = CSRFOnlyForm()
+
     if request.method == 'POST':
         rating = request.form.get('rating', type=int)
-        title = request.form.get('title', '').strip()
         content = request.form.get('content', '').strip()
-        reading_status = request.form.get('reading_status', '').strip()
-        tags = request.form.get('tags', '').strip()
-        is_anonymous = bool(request.form.get('is_anonymous'))
 
         # Validation
         if not rating or rating < 1 or rating > 5:
             flash('Please provide a rating between 1 and 5 stars.', 'error')
-            return render_template('books/review.html', book=book, existing_review=existing_review)
+            return render_template('books/review.html', book=book, existing_review=existing_review, form=form)
         if not content or len(content) < 10:
             flash('Your review should be at least 10 characters long.', 'error')
-            return render_template('books/review.html', book=book, existing_review=existing_review)
+            return render_template('books/review.html', book=book, existing_review=existing_review, form=form)
 
         if existing_review:
             # Update existing review
             existing_review.rating = rating
-            existing_review.title = title
-            existing_review.content = content
-            existing_review.reading_status = reading_status
-            existing_review.tags = tags
-            existing_review.is_anonymous = is_anonymous
+            existing_review.review_text = content
             existing_review.updated_at = datetime.utcnow()
             existing_review.is_approved = False  # Re-approval needed after edit
             try:
@@ -412,11 +476,7 @@ def review_book(book_id):
                 user_id=current_user.id,
                 book_id=book_id,
                 rating=rating,
-                title=title,
-                content=content,
-                reading_status=reading_status,
-                tags=tags,
-                is_anonymous=is_anonymous,
+                review_text=content,
                 created_at=datetime.utcnow(),
                 updated_at=datetime.utcnow(),
                 is_approved=False
@@ -434,8 +494,8 @@ def review_book(book_id):
                 db.session.rollback()
                 flash('An error occurred while submitting your review.', 'error')
                 current_app.logger.error(f'Review submission error: {str(e)}')
-    
-    return render_template('books/review.html', book=book, existing_review=existing_review)
+
+    return render_template('books/review.html', book=book, existing_review=existing_review, form=form)
 
 @books_bp.route('/my-books')
 @login_required

@@ -27,76 +27,6 @@ def admin_required(f):
     return decorated_function
 
 def librarian_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or not current_user.is_librarian():
-            flash('You need librarian privileges to access this page.', 'error')
-            return redirect(url_for('main.index'))
-        return f(*args, **kwargs)
-    return decorated_function
-
-@admin_bp.route('/borrowings/<int:borrowing_id>/approve', methods=['POST'])
-@librarian_required
-def approve_borrowing(borrowing_id):
-    borrowing = BorrowingTransaction.query.get_or_404(borrowing_id)
-    if borrowing.status != 'pending':
-        flash('Borrowing request is not pending.', 'error')
-        return redirect(url_for('admin.pending_borrowings'))
-    borrowing.status = 'borrowed'
-    db.session.commit()
-    flash('Borrowing request approved.', 'success')
-    return redirect(url_for('admin.pending_borrowings'))
-
-@admin_bp.route('/borrowings/<int:borrowing_id>/reject', methods=['POST'])
-@librarian_required
-def reject_borrowing(borrowing_id):
-    borrowing = BorrowingTransaction.query.get_or_404(borrowing_id)
-    if borrowing.status != 'pending':
-        flash('Borrowing request is not pending.', 'error')
-        return redirect(url_for('admin.pending_borrowings'))
-    borrowing.status = 'rejected'
-    db.session.commit()
-    flash('Borrowing request rejected.', 'success')
-    return redirect(url_for('admin.pending_borrowings'))
-
-@admin_bp.route('/borrowings/pending')
-@librarian_required
-def pending_borrowings():
-    """View and manage pending borrow requests"""
-    pending = BorrowingTransaction.query.filter_by(status='pending').order_by(BorrowingTransaction.created_at.desc()).all()
-    return render_template('admin/pending_borrowings.html', borrowings=pending)
-from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, current_app
-
-admin_bp = Blueprint('admin', __name__)
-from flask_login import login_required, current_user
-from flask_wtf.csrf import CSRFProtect, generate_csrf
-from app import db
-from app.models.user import User, UserRole
-from app.models.book import Book, Category
-from app.models.borrowing import BorrowingTransaction
-from app.models.review import BookReview
-from app.models.reservation import BookReservation
-from app.models.offline import DigitalDownload, ReadingSession
-from app.models.subscription import SubscriptionPlan, UserSubscription, BillingRecord, Payment
-from werkzeug.utils import secure_filename
-from functools import wraps
-import os
-from datetime import datetime, date, timedelta
-from decimal import Decimal
-
-admin_bp = Blueprint('admin', __name__)
-
-def admin_required(f):
-    """Decorator to require admin access"""
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or not current_user.is_admin():
-            flash('You need administrator privileges to access this page.', 'error')
-            return redirect(url_for('main.index'))
-        return f(*args, **kwargs)
-    return decorated_function
-
-def librarian_required(f):
     """Decorator to require librarian or admin access"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
@@ -1213,16 +1143,21 @@ def manage_reviews():
                          pagination=pagination,
                          status=status)
 
+@admin_bp.route('/reviews/pending')
+@admin_required
+def pending_reviews():
+    """View and manage pending reviews"""
+    pending = BookReview.query.filter_by(is_approved=False).order_by(BookReview.created_at.desc()).all()
+    return render_template('admin/pending_reviews.html', reviews=pending)
+
 @admin_bp.route('/reviews/<int:review_id>/approve', methods=['POST'])
-@librarian_required
+@admin_required
 def approve_review(review_id):
-    """Approve a book review"""
     review = BookReview.query.get_or_404(review_id)
-    
     review.approve()
-    flash('Review has been approved.', 'success')
-    
-    return redirect(url_for('admin.manage_reviews'))
+    db.session.commit()
+    flash('Review approved.', 'success')
+    return redirect(url_for('admin.review_detail', review_id=review.id))
 
 @admin_bp.route('/reviews/<int:review_id>/delete', methods=['POST'])
 @librarian_required
@@ -1242,8 +1177,10 @@ def delete_review(review_id):
 @librarian_required
 def review_detail(review_id):
     """View details of a single review"""
+    from app.forms import CSRFOnlyForm
     review = BookReview.query.get_or_404(review_id)
-    return render_template('admin/review_detail.html', review=review)
+    form = CSRFOnlyForm()
+    return render_template('admin/review_detail.html', review=review, form=form)
 
 @admin_bp.route('/categories')
 @librarian_required

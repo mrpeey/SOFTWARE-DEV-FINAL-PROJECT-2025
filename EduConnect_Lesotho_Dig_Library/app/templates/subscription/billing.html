@@ -52,7 +52,7 @@
 
                     <!-- Payment Form -->
                     <form method="POST" action="{{ url_for('subscription.process_payment', billing_id=billing_record.id) }}" id="paymentForm">
-                        {{ csrf_token() }}
+                        {{ form.csrf_token }}
                         
                         <h5 class="border-bottom pb-2 mb-3">Payment Method</h5>
                         

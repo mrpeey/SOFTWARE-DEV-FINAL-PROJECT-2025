@@ -109,6 +109,27 @@
                 </div>
             </div>
         </div>
+
+        <div class="col-md-3 mb-3">
+            <div class="card bg-info text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h3 class="card-title">{{ pending_reviews }}</h3>
+                            <p class="card-text">Pending Reviews</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{{ url_for('admin.manage_reviews') }}" class="text-white text-decoration-none">
+                        <small><i class="fas fa-arrow-right me-1"></i>Approve Reviews</small>
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Quick Actions & Recent Activity -->

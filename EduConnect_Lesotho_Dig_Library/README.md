@@ -1,3 +1,104 @@
+# Deployment Checklist
+
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/mrpeey/SOFTWARE-DEV-FINAL-PROJECT-2025.git
+   cd SOFTWARE-DEV-FINAL-PROJECT-2025/EduConnect_Lesotho_Dig_Library
+   ```
+
+2. **Set Up Python Environment**
+   - Recommended: Python 3.10+
+   - Create and activate a virtual environment:
+     ```bash
+     python -m venv venv
+     source venv/bin/activate  # On Windows: venv\Scripts\activate
+     ```
+
+3. **Install Dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Configure Environment Variables**
+   - Copy `.env.example` to `.env` and update values as needed (secret keys, database URI, etc.)
+
+5. **Initialize the Database**
+   - Run migrations or use provided SQL scripts in `database/schema.sql`.
+   - Example:
+     ```bash
+     flask db upgrade
+     ```
+
+6. **Run the Application (Development)**
+   ```bash
+   python run.py
+   ```
+   - Access at: http://127.0.0.1:8080
+
+7. **Run Tests**
+   ```bash
+   python test_routes.py
+   python test_review_api.py
+   python test_my_books_route.py
+   ```
+
+8. **Build and Deploy (Production)**
+   - Use Docker for containerized deployment:
+     ```bash
+     docker build -t educonnect-diglib .
+     docker run -d -p 8080:8080 educonnect-diglib
+     ```
+   - Or deploy to Fly.io using `fly.toml` and Fly CLI:
+     ```bash
+     fly launch
+     fly deploy
+     ```
+
+9. **Check Static Assets**
+   - Ensure all images (covers, profiles) are present or use defaults.
+   - Minify CSS/JS for best performance.
+
+10. **Review Security & Environment**
+    - Set secure secret keys and production database URI.
+    - Enable HTTPS and configure CORS if needed.
+
+# Step-by-Step Guide
+
+## 1. Local Development
+
+1. Clone the repo and set up your Python environment (see above).
+2. Install dependencies and configure `.env`.
+3. Initialize the database and run the app.
+4. Access the app at http://127.0.0.1:8080 and test all features.
+5. Run tests to verify stability.
+
+## 2. Production Deployment
+
+1. Build the Docker image and run the container, or deploy to Fly.io.
+2. Set environment variables for production in `.env` or Fly.io secrets.
+3. Ensure static assets are optimized and present.
+4. Monitor logs and errors after deployment.
+
+## 3. Admin & User Setup
+
+1. Register admin and user accounts.
+2. Upload profile images and add books via the admin dashboard.
+3. Test borrowing, reviews, subscriptions, and offline downloads.
+
+## 4. Offline & Mobile Testing
+
+1. Test offline mode by downloading books and accessing offline HTML.
+2. Verify mobile responsiveness and accessibility.
+
+## 5. Troubleshooting
+
+1. Check logs for errors.
+2. Review CSRF, authentication, and database issues.
+3. Use provided test scripts for debugging.
+
+---
+
+For more details, see the full documentation and deployment scripts in the repo.
 # EduConnect Lesotho Digital Library
 
 ## United Nations Sustainable Development Goals (UN SDGs)
