@@ -52,7 +52,8 @@ def dashboard():
         'overdue_books': BorrowingTransaction.query.filter_by(status='overdue').count(),
         'pending_reservations': BookReservation.query.filter_by(status='active').count(),
         'pending_reviews': BookReview.query.filter_by(is_approved=False).count(),
-        'total_downloads': DigitalDownload.query.count()
+        'total_downloads': DigitalDownload.query.count(),
+        'active_subscriptions': UserSubscription.query.filter_by(is_active=True).count()
     }
     
     # Recent activity aggregation
@@ -160,7 +161,8 @@ def dashboard():
                          category_data=category_data,
                          monthly_labels=monthly_labels,
                          monthly_borrowings=monthly_borrowings,
-                         peak_month=peak_month)
+                         peak_month=peak_month,
+                         active_subscriptions=stats['active_subscriptions'])
 
 @admin_bp.route('/books')
 @librarian_required
