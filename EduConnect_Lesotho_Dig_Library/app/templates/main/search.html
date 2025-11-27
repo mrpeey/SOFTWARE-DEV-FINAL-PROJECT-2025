@@ -6,8 +6,14 @@
 <!-- Floating AI Chat Button -->
 <!-- Back to Top Button -->
 <a href="#" id="backToTopBtn" class="btn btn-primary btn-lg position-fixed" style="bottom:32px; right:32px; z-index:9999; border-radius:50%; display:none;" title="Back to Top">
-    <i class="fas fa-arrow-up"></i>
+        <i class="fas fa-arrow-up"></i>
 </a>
+<!-- Back to Home Button -->
+<div class="mb-3 w-100 d-flex justify-content-end gap-2">
+    <a href="{{ url_for('main.index') }}" class="btn btn-light">
+        <i class="fas fa-home me-1"></i>Back to Home
+    </a>
+</div>
 <!-- Search Header -->
 <div class="row mb-4">
     <div class="col-12">
@@ -123,80 +129,86 @@
                     {% endif %}
                     <small class="text-muted">({{ pagination.total }} found)</small>
                 </h4>
-                
-                <div class="btn-group btn-group-sm" role="group">
-                    <div class="view-toggle-label me-2">
-                        <span class="fw-bold text-primary">View:</span>
-                    </div>
-                    <button type="button" class="btn btn-outline-primary btn-lg px-4 py-2 me-1 view-toggle-btn active" id="gridView" title="Grid View">
-                        <i class="fas fa-th"></i>
-                    </button>
-                    <button type="button" class="btn btn-outline-success btn-lg px-4 py-2 view-toggle-btn" id="listView" title="List View">
-                        <i class="fas fa-list"></i>
-                    </button>
-                </div>
             </div>
         </div>
     </div>
     
     <!-- Books Grid -->
-    <div class="row" id="booksContainer">
-        {% for book in books %}
-        <div class="col-lg-3 col-md-4 col-sm-6 mb-4 book-item">
-            <div class="card book-card h-100">
-                {% set category_colors = {
-                    'Academic': '#3b82f6',
-                    'Literature': '#a855f7',
-                    'Science': '#14b8a6',
-                    'Technology': '#0ea5e9',
-                    'History': '#f59e42',
-                    'Culture': '#f43f5e',
-                    'Health': '#22c55e',
-                    'Medicine': '#eab308',
-                    'Agriculture': '#84cc16',
-                    'Business': '#f97316',
-                    'Economics': '#e11d48',
-                    'Government': '#6366f1',
-                    'Law': '#f43f5e',
-                    'Digital': '#0ea5e9',
-                    'Literacy': '#a855f7',
-                    'Local': '#f59e42'
-                } %}
-                {% set cat_color = category_colors.get(book.category.name.split(' ')[0] if book.category else '', '#6c63ff') %}
-                {% if book.cover_image %}
-                    <img src="{{ url_for('static', filename='uploads/covers/' + book.cover_image) }}" class="card-img-top rounded w-100 shadow" style="border-radius:16px; max-width:100%; height:auto; object-fit:cover;" alt="{{ book.title }} cover">
-                {% else %}
-                    <div class="card-img-top rounded w-100 shadow" style="border-radius:16px; max-width:100%; height:auto;">
-                        {% include 'shared/book_cover_svg.html' %}
-                    </div>
-                {% endif %}
-                
-                <div class="card-body d-flex flex-column">
-                    <h6 class="card-title">{{ book.title }}</h6>
-                    <p class="text-muted small mb-2">by {{ book.author }}</p>
-                    
-                    {% if book.description %}
-                    <p class="card-text small flex-grow-1">
-                        {{ book.description[:80] }}{% if book.description|length > 80 %}...{% endif %}
-                    </p>
-                    {% endif %}
-                    
-                    <div class="mt-auto">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <small class="text-muted">
-                                {% if book.is_digital %}
-                                    <i class="fas fa-download text-success"></i> Digital
-                                {% else %}
-                                    <i class="fas fa-book text-primary"></i> Physical
-                                {% endif %}
-                            </small>
-                            <small class="text-muted">
-                                {{ book.category.name if book.category }}
-                            </small>
-                        </div>
-                        
+    <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Cover</th>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Category</th>
+                    <th>Format</th>
+                    <th>Rating</th>
+                    <th>Availability</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for book in books %}
+                <tr>
+                    <td style="width:70px;">
+                        {% if book.cover_image %}
+                            <img src="{{ url_for('static', filename='uploads/covers/' + book.cover_image) }}" alt="{{ book.title }} cover" class="img-fluid rounded" style="max-width:60px; max-height:80px;">
+                        {% else %}
+                            {% set category_colors = {
+                                'Academic': ['#3b82f6', '#60a5fa'],
+                                'Literature': ['#a855f7', '#f472b6'],
+                                'Science': ['#14b8a6', '#06b6d4'],
+                                'Technology': ['#0ea5e9', '#6366f1'],
+                                'History': ['#f59e42', '#fbbf24'],
+                                'Culture': ['#f43f5e', '#fb7185'],
+                                'Health': ['#22c55e', '#4ade80'],
+                                'Medicine': ['#eab308', '#fde68a'],
+                                'Agriculture': ['#84cc16', '#a3e635'],
+                                'Business': ['#f97316', '#fbbf24'],
+                                'Economics': ['#e11d48', '#f472b6'],
+                                'Government': ['#6366f1', '#818cf8'],
+                                'Law': ['#f43f5e', '#e11d48'],
+                                'Digital': ['#0ea5e9', '#38bdf8'],
+                                'Literacy': ['#a855f7', '#6366f1'],
+                                'Local': ['#f59e42', '#fbbf24']
+                            } %}
+                            {% set cat_colors = category_colors.get(book.category.name.split(' ')[0] if book.category else '', ['#764ba2', '#a855f7']) %}
+                            {% set title_length = book.title|length %}
+                            {% set author_length = book.author|length %}
+                            {% set svg_height = 80 %}
+                            {% set svg_width = 60 %}
+                            <svg width="{{ svg_width }}" height="{{ svg_height }}" viewBox="0 0 {{ svg_width }} {{ svg_height }}" xmlns="http://www.w3.org/2000/svg" style="background: #f8f9fa; border-radius: 8px;">
+                                <defs>
+                                    <linearGradient id="gradBookSmall" x1="0" y1="0" x2="1" y2="1">
+                                        <stop offset="0%" stop-color="{{ cat_colors[0] }}" />
+                                        <stop offset="100%" stop-color="{{ cat_colors[1] }}" />
+                                    </linearGradient>
+                                </defs>
+                                <rect width="{{ svg_width }}" height="{{ svg_height }}" rx="8" fill="url(#gradBookSmall)"/>
+                                {% set dynamic_title_font = 10 if title_length <= 30 else 8 if title_length <= 40 else 7 %}
+                                {% set dynamic_author_font = 8 if author_length <= 24 else 7 %}
+                                <text x="50%" y="38%" text-anchor="middle" fill="#fff" font-size="{{ dynamic_title_font }}" font-weight="bold" font-family="Arial, sans-serif">{{ book.title|truncate(20, True, '...') }}</text>
+                                <text x="50%" y="65%" text-anchor="middle" fill="#e0e0e0" font-size="{{ dynamic_author_font }}" font-family="Arial, sans-serif">{{ book.author|truncate(16, True, '...') }}</text>
+                                <g>
+                                    <circle cx="50" cy="12" r="7" fill="#fff" opacity="0.15" />
+                                    <text x="{{ svg_width - 10 }}" y="18" text-anchor="middle" fill="#fff" font-size="10" font-family="Arial">&#128214;</text>
+                                </g>
+                            </svg>
+                        {% endif %}
+                    </td>
+                    <td><strong>{{ book.title }}</strong></td>
+                    <td>{{ book.author }}</td>
+                    <td>{{ book.category.name if book.category }}</td>
+                    <td>
+                        {% if book.is_digital %}
+                            <span class="badge bg-success">Digital</span>
+                        {% else %}
+                            <span class="badge bg-primary">Physical</span>
+                        {% endif %}
+                    </td>
+                    <td>
                         {% if book.average_rating > 0 %}
-                        <div class="mb-2">
                             {% for i in range(5) %}
                                 {% if i < book.average_rating %}
                                     <i class="fas fa-star text-warning"></i>
@@ -205,32 +217,27 @@
                                 {% endif %}
                             {% endfor %}
                             <small class="text-muted">({{ book.review_count }})</small>
-                        </div>
+                        {% else %}
+                            <span class="text-muted">No ratings</span>
                         {% endif %}
-                        
-                        <div class="d-flex justify-content-between">
-                            {% if book.is_available %}
-                                <span class="badge bg-success">Available</span>
-                            {% else %}
-                                <span class="badge bg-warning">Not Available</span>
-                            {% endif %}
-                        </div>
+                    </td>
+                    <td>
+                        {% if book.is_available %}
+                            <span class="badge bg-success">Available</span>
+                        {% else %}
+                            <span class="badge bg-warning">Not Available</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('books.my_book', book_id=book.id) }}" class="btn btn-primary btn-sm">View Details</a>
                         {% if current_user.is_authenticated %}
-                        <div class="mt-2">
-                            <a href="{{ url_for('books.my_books') }}" class="btn btn-outline-secondary w-100">My Books</a>
-                        </div>
+                            <a href="{{ url_for('books.my_books') }}" class="btn btn-outline-secondary btn-sm">My Books</a>
                         {% endif %}
-                            
-                            <a href="{{ url_for('books.my_book', book_id=book.id) }}" 
-                               class="btn btn-primary btn-sm">
-                                View Details
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
     
     <!-- Pagination -->

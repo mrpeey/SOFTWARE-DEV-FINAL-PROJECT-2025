@@ -31,9 +31,12 @@ def plans():
     plans = SubscriptionPlan.query.filter_by(is_active=True).order_by(SubscriptionPlan.price).all()
     current_subscription = current_user.get_current_subscription()
     
+    from app.forms import CSRFOnlyForm
+    csrf_forms = [CSRFOnlyForm() for _ in plans]
     return render_template('subscription/plans.html',
                          plans=plans,
-                         current_subscription=current_subscription)
+                         current_subscription=current_subscription,
+                         csrf_forms=csrf_forms)
 
 @subscription_bp.route('/subscribe/<int:plan_id>', methods=['GET', 'POST'])
 @login_required

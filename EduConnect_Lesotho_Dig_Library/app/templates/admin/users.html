@@ -53,6 +53,9 @@
                                 </option>
                                 {% endfor %}
                             </select>
+                                <!-- Stray character 'r' removed -->
+                                <option value="active" {% if request.args.get('status') == 'active' %}selected{% endif %}>Active</option>
+                                <option value="inactive" {% if request.args.get('status') == 'inactive' %}selected{% endif %}>Inactive</option>
                         </div>
                         <div class="col-md-2">
                             <label class="form-label">Status</label>
@@ -185,16 +188,16 @@
                                     <td>
                                         <div class="btn-group" role="group">
                                             <button type="button" class="btn btn-outline-primary btn-sm" 
-                                                    onclick="viewUser({{ user.id }})" title="View Details">
+                                                    onclick="viewUser('{{ user.id }}')" title="View Details">
                                                 <i class="fas fa-eye"></i>
                                             </button>
                                             <button type="button" class="btn btn-outline-warning btn-sm" 
-                                                    onclick="editUser({{ user.id }})" title="Edit User">
+                                                    onclick="editUser('{{ user.id }}')" title="Edit User">
                                                 <i class="fas fa-edit"></i>
                                             </button>
                                             {% if user.id != current_user.id %}
                                             <button type="button" class="btn btn-outline-{% if user.is_active %}danger{% else %}success{% endif %} btn-sm" 
-                                                    onclick="toggleUserStatus({{ user.id }})" 
+                                                    onclick="toggleUserStatus('{{ user.id }}')" 
                                                     title="{% if user.is_active %}Deactivate{% else %}Activate{% endif %}">
                                                 <i class="fas fa-{% if user.is_active %}ban{% else %}check{% endif %}"></i>
                                             </button>

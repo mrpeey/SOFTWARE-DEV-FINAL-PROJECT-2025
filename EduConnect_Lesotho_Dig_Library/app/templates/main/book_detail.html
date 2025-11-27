@@ -1,241 +1,250 @@
 <script>
 window.currentUserId = "{{ current_user.id if current_user.is_authenticated else '' }}";
 </script>
-{% extends "base.html" %}
-{% block title %}{{ book.title }} - {{ library_name }}{% endblock %}
 
+{% extends 'base.html' %}
 {% block content %}
-<!-- Back to Top Button -->
-<a href="#" id="backToTopBtn" class="btn btn-primary btn-lg position-fixed" style="bottom:32px; right:32px; z-index:9999; border-radius:50%; display:none;" title="Back to Top">
-    <i class="fas fa-arrow-up"></i>
-</a>
-
-
-{% block extra_css %}
-<style>
-    .text-purple {
-        color: #6f42c1 !important;
-    }
-</style>
-{% endblock %}
-
-<!-- Enhanced Book Actions -->
-<div class="row justify-content-center mt-4">
-    <div class="col-lg-10 col-md-12">
-        <div class="card border-0 shadow mb-4">
-            <div class="card-header bg-gradient-primary text-white d-flex flex-column flex-md-row justify-content-between align-items-center" style="background: linear-gradient(90deg, #6c63ff 0%, #48c6ef 100%);">
-                <h3 class="mb-2 mb-md-0"><i class="fas fa-book-open me-2"></i> {{ book.title }}</h3>
-                <div class="d-flex gap-2 flex-wrap">
-                    <button class="btn btn-outline-warning" id="favorite-btn" title="Favorite"><i class="fas fa-heart"></i></button>
-                    <button class="btn btn-outline-info" id="download-btn" title="Download"><i class="fas fa-download"></i></button>
-                    <button class="btn btn-outline-secondary" id="share-btn" title="Share"><i class="fas fa-share-alt"></i></button>
-                    <button class="btn btn-outline-success" id="borrow-btn" title="Borrow"><i class="fas fa-book-reader"></i></button>
+<div class="container mt-4">
+    <div class="mb-3 w-100 d-flex justify-content-end gap-2">
+        <a href="{{ url_for('main.index') }}" class="btn btn-light">
+            <i class="fas fa-home me-1"></i>Back to Home
+        </a>
+    </div>
+    <div class="mb-3 d-flex gap-2">
+        <a href="{{ url_for('books.my_books') }}" class="btn btn-outline-primary">
+            <i class="fas fa-arrow-left me-1"></i> Back to My Books
+        </a>
+    </div>
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-lg">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Recommended Reading</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for rec in book.recommended_reading if book.recommended_reading %}
+                            <li class="list-group-item">
+                                <a href="{{ url_for('main.book_detail', book_id=rec.id) }}">{{ rec.title }} by {{ rec.author }}</a>
+                            </li>
+                        {% else %}
+                            <li class="list-group-item text-muted">No recommended reading for this book.</li>
+                        {% endfor %}
+                    </ul>
                 </div>
             </div>
-            <div class="card-body">
-                <div class="row g-4 align-items-center">
-                    <div class="col-md-4 text-center">
-                        {% if book.cover_image %}
-                            <img src="{{ url_for('static', filename=book.cover_image) }}" class="img-fluid rounded shadow" alt="{{ book.title }}" style="width:100%;max-width:500px;height:auto;max-height:400px;object-fit:contain;">
-                        {% elif book.svg_placeholder %}
-                            <img src="{{ url_for('static', filename=book.svg_placeholder) }}" class="img-fluid rounded shadow" alt="{{ book.title }} SVG" style="width:100%;max-width:500px;height:auto;max-height:400px;object-fit:contain;">
-                        {% else %}
-                            <img src="{{ url_for('static', filename='images/default-cover.png') }}" class="img-fluid rounded shadow" alt="{{ book.title }}" style="width:100%;max-width:500px;height:auto;max-height:400px;object-fit:contain;">
-                        {% endif %}
-                        <div class="mt-2">
-                            <span class="badge bg-primary">{{ book.category }}</span>
-                        </div>
+        </div>
+    </div>
+    <div class="card shadow-lg mb-4">
+        <div class="row g-0">
+            <div class="col-md-4 text-center p-4">
+                {% if book.cover_image %}
+                    <img src="{{ url_for('static', filename='uploads/covers/' + book.cover_image) }}" class="w-100 shadow rounded" alt="Book Cover" style="border-radius:16px; max-width:100%; height:340px; object-fit:cover;">
+                {% else %}
+                    {% set category_colors = {
+                        'Academic': ['#3b82f6', '#60a5fa'],
+                        'Literature': ['#a855f7', '#f472b6'],
+                        'Science': ['#14b8a6', '#06b6d4'],
+                        'Technology': ['#0ea5e9', '#6366f1'],
+                        'History': ['#f59e42', '#fbbf24'],
+                        'Culture': ['#f43f5e', '#fb7185'],
+                        'Health': ['#22c55e', '#4ade80'],
+                        'Medicine': ['#eab308', '#fde68a'],
+                        'Agriculture': ['#84cc16', '#a3e635'],
+                        'Business': ['#f97316', '#fbbf24'],
+                        'Economics': ['#e11d48', '#f472b6'],
+                        'Government': ['#6366f1', '#818cf8'],
+                        'Law': ['#f43f5e', '#e11d48'],
+                        'Digital': ['#0ea5e9', '#38bdf8'],
+                        'Literacy': ['#a855f7', '#6366f1'],
+                        'Local': ['#f59e42', '#fbbf24']
+                    } %}
+                    {% set cat_colors = category_colors.get(book.category.name.split(' ')[0] if book.category else '', ['#764ba2', '#a855f7']) %}
+                    {% set title_length = book.title|length %}
+                    {% set author_length = book.author|length %}
+                    {% set svg_height = 340 %}
+                    {% set svg_width = 340 %}
+                    <svg width="100%" height="{{ svg_height }}" viewBox="0 0 {{ svg_width }} {{ svg_height }}" xmlns="http://www.w3.org/2000/svg" style="background: #f8f9fa; border-radius: 16px;">
+                        <defs>
+                            <linearGradient id="gradBook" x1="0" y1="0" x2="1" y2="1">
+                                <stop offset="0%" stop-color="{{ cat_colors[0] }}" />
+                                <stop offset="100%" stop-color="{{ cat_colors[1] }}" />
+                            </linearGradient>
+                        </defs>
+                        <rect width="{{ svg_width }}" height="{{ svg_height }}" rx="32" fill="url(#gradBook)"/>
+                        {% set dynamic_title_font = 28 if title_length <= 30 else 22 if title_length <= 40 else 18 %}
+                        {% set dynamic_author_font = 22 if author_length <= 24 else 18 %}
+                        <text x="50%" y="38%" text-anchor="middle" fill="#fff" font-size="{{ dynamic_title_font }}" font-weight="bold" font-family="Arial, sans-serif">{{ book.title|truncate(60, True, '...') }}</text>
+                        <text x="50%" y="60%" text-anchor="middle" fill="#e0e0e0" font-size="{{ dynamic_author_font }}" font-family="Arial, sans-serif">{{ book.author|truncate(40, True, '...') }}</text>
+                        <g>
+                            <circle cx="200" cy="40" r="22" fill="#fff" opacity="0.15" />
+                            <text x="{{ svg_width - 40 }}" y="50" text-anchor="middle" fill="#fff" font-size="22" font-family="Arial">&#128214;</text>
+                        </g>
+                    </svg>
+                {% endif %}
+            </div>
+            <div class="col-md-8">
+                <div class="card-body">
+                    <h3 class="card-title">{{ book.title }}</h3>
+                    <h5 class="card-subtitle mb-2 text-muted">by {{ book.author }}</h5>
+                    <p class="mb-1"><strong>Category:</strong> {{ book.category or 'N/A' }}</p>
+                    <p class="mb-1"><strong>Year:</strong> {{ book.publication_year or 'N/A' }} | <strong>Edition:</strong> {{ book.edition or 'N/A' }}</p>
+                    <p class="mb-1"><strong>Pages:</strong> {{ book.pages or 'N/A' }} | <strong>Language:</strong> {{ book.language }}</p>
+                    <p class="mt-3">{{ book.description }}</p>
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="me-2"><strong>Average Rating:</strong></span>
+                        <span class="text-warning">{% for i in range(1, 6) %}<i class="fa fa-star{% if i > book.average_rating %}-o{% endif %}"></i>{% endfor %}</span>
+                        <span class="ms-2">({{ book.average_rating }}/5, {{ book.review_count }} reviews)</span>
                     </div>
-                    <div class="col-md-8">
-                        <h5 class="text-purple">Author: {{ book.author }}</h5>
-                        <p class="mb-2">{{ book.description }}</p>
-                        <div class="d-flex flex-wrap gap-2 mb-2">
-                            <span class="badge bg-info">Published: {{ book.published_date }}</span>
-                            <span class="badge bg-success">Pages: {{ book.page_count }}</span>
-                            <span class="badge bg-warning text-dark">Language: {{ book.language }}</span>
+                    <div class="mt-3">
+                        <a href="{{ url_for('main.index') }}" class="btn btn-secondary me-2">Home</a>
+                        <a href="{{ url_for('books.my_books') }}" class="btn btn-primary me-2">My Books</a>
+                        {% if can_borrow %}
+                                 <a href="{{ url_for('books.borrow_confirm', book_id=book.id) }}" class="btn btn-success me-2">Borrow</a>
+                        {% else %}
+                            <button class="btn btn-secondary me-2" disabled title="{{ borrow_msg }}">Borrow</button>
+                        {% endif %}
+                        <div class="dropdown d-inline me-2">
+                            <button class="btn btn-info dropdown-toggle" type="button" id="shareDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="fas fa-share-alt me-1"></i>Share
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="shareDropdown">
+                                <li><a id="shareEmail" class="dropdown-item" target="_blank"><i class="fas fa-envelope me-1"></i>Email</a></li>
+                                <li><a id="shareWhatsApp" class="dropdown-item" target="_blank"><i class="fab fa-whatsapp me-1"></i>WhatsApp</a></li>
+                                <li><a id="shareFacebook" class="dropdown-item" target="_blank"><i class="fab fa-facebook me-1"></i>Facebook</a></li>
+                                <li><button id="shareCopy" class="dropdown-item"><i class="fas fa-link me-1"></i>Copy Link</button></li>
+                                <li><button id="shareNative" class="dropdown-item"><i class="fas fa-share-alt me-1"></i>Share via Device...</button></li>
+                            </ul>
                         </div>
-                        <div class="d-flex flex-wrap gap-2">
-                            {% if book.tags %}
-                                {% for tag in book.tags.split(',') %}
-                                    <span class="badge bg-light text-dark border">{{ tag.strip() }}</span>
-                                {% endfor %}
+                        <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            var bookUrl = window.location.href;
+                            var bookTitle = document.querySelector('h3.card-title, h2').innerText;
+                            document.getElementById('shareEmail').href = `mailto:?subject=Check out this book: ${bookTitle}&body=View it here: ${bookUrl}`;
+                            document.getElementById('shareWhatsApp').href = `https://wa.me/?text=Check out this book: ${bookTitle} - ${bookUrl}`;
+                            document.getElementById('shareFacebook').href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(bookUrl)}`;
+                            document.getElementById('shareCopy').onclick = function() {
+                                navigator.clipboard.writeText(bookUrl);
+                                this.blur();
+                                alert('Book link copied to clipboard!');
+                            };
+                            document.getElementById('shareNative').onclick = function() {
+                                if (navigator.share) {
+                                    navigator.share({
+                                        title: bookTitle,
+                                        text: `Check out this book: ${bookTitle}`,
+                                        url: bookUrl
+                                    });
+                                } else {
+                                    alert('Native sharing is not supported on this device/browser. Please use another option.');
+                                }
+                            };
+                        });
+                        </script>
+                        {% if book.is_digital and can_download %}
+                            <a href="{{ url_for('books.download_book', book_id=book.id) }}" class="btn btn-success">Download</a>
+                        {% elif book.is_digital %}
+                            <button class="btn btn-secondary" disabled title="{{ download_msg }}">Download</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <h4 class="mb-0">Reviews</h4>
+        </div>
+        <div class="card-body">
+            {% set user_review = None %}
+            {% if reviews and current_user.is_authenticated %}
+                {% for review in reviews %}
+                    {% if review.user and review.user.id == current_user.id %}
+                        {% set user_review = review %}
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+            <div class="mb-3">
+                {% if current_user.is_authenticated %}
+                    {% if user_review %}
+                        <button class="btn btn-warning btn-sm me-2" id="editReviewBtn">Edit Your Review</button>
+                        <form action="{{ url_for('books.delete_review', book_id=book.id, review_id=user_review.id) }}" method="post" style="display:inline;">
+                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete your review?');">Delete Your Review</button>
+                        </form>
+                    {% else %}
+                        <a href="{{ url_for('books.review_book', book_id=book.id) }}" class="btn btn-primary btn-sm">Write a Review</a>
+                    {% endif %}
+                {% endif %}
+            </div>
+            {% if reviews %}
+                {% for review in reviews %}
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-2">
+                                <img src="{{ url_for('static', filename='uploads/profiles/' ~ review.user.profile_image) if review.user and review.user.profile_image else url_for('static', filename='images/default_profile.png') }}" class="rounded-circle me-2" width="40" height="40" alt="Reviewer">
+                                <span class="fw-bold">{{ review.user.get_full_name() if review.user else 'Anonymous' }}</span>
+                                <span class="ms-3 text-warning">{% for i in range(1, 6) %}<i class="fa fa-star{% if i > review.rating %}-o{% endif %}"></i>{% endfor %}</span>
+                                <span class="ms-3 text-muted small">{{ review.created_at.strftime('%Y-%m-%d') if review.created_at else '' }}</span>
+                                {% if review.is_approved %}
+                                    <span class="badge bg-success ms-2">Approved</span>
+                                {% else %}
+                                    <span class="badge bg-warning text-dark ms-2">Pending</span>
+                                {% endif %}
+                            </div>
+                            {% if current_user.is_authenticated and review.user and review.user.id == current_user.id %}
+                                <div id="userReviewDisplay">
+                                    <p class="mb-0">{{ review.review_text }}</p>
+                                </div>
+                                <form id="editReviewForm" action="{{ url_for('books.edit_review', book_id=book.id, review_id=review.id) }}" method="post" style="display:none;">
+                                    <div class="mb-2">
+                                        <textarea name="review_text" class="form-control" rows="3">{{ review.review_text }}</textarea>
+                                    </div>
+                                    <div class="mb-2">
+                                        <label for="rating" class="form-label">Rating:</label>
+                                        <select name="rating" class="form-select" style="width:auto; display:inline-block;">
+                                            {% for i in range(1, 6) %}
+                                                <option value="{{ i }}" {% if review.rating == i %}selected{% endif %}>{{ i }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    <button type="submit" class="btn btn-success btn-sm me-2">Save</button>
+                                    <button type="button" class="btn btn-secondary btn-sm" id="cancelEditBtn">Cancel</button>
+                                </form>
+                            {% else %}
+                                <p class="mb-0">{{ review.review_text }}</p>
                             {% endif %}
                         </div>
                     </div>
-                </div>
-            </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted">No reviews yet for this book.</p>
+            {% endif %}
         </div>
     </div>
 </div>
-
-<!-- Review Section -->
-<div class="row justify-content-center mt-4">
-    <div class="col-lg-10 col-md-12">
-        <div class="card border-0 shadow-sm mb-4">
-            <div class="card-header bg-white d-flex flex-column flex-md-row justify-content-between align-items-center">
-                <h4 class="mb-2 mb-md-0"><i class="fas fa-comments me-2 text-primary"></i> Reviews</h4>
-                <button class="btn btn-success" id="add-review-btn"><i class="fas fa-pen"></i> Write a Review</button>
-            </div>
-            <div class="card-body" id="reviews-list">
-                <!-- Reviews will be loaded here by JS -->
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Review Modal -->
-<div class="modal fade" id="reviewModal" tabindex="-1" aria-labelledby="reviewModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form id="review-form">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="reviewModalLabel">
-                      {% if review_id is defined and review_id %}Edit Your Review{% else %}Write a Review{% endif %}
-                    </h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <input type="hidden" name="review_id" id="review_id">
-                    <div class="mb-3">
-                        <label for="rating" class="form-label">Your Rating</label>
-                        <div id="star-rating" class="mb-2">
-                            {% for i in range(1, 6) %}
-                            <span class="star" data-value="{{ i }}" style="font-size:1.5rem;cursor:pointer;color:#ffc107;">&#9733;</span>
-                            {% endfor %}
-                        </div>
-                        <select class="form-select visually-hidden" id="rating" name="rating" required>
-                            <option value="">Select rating</option>
-                            {% for i in range(1, 6) %}
-                            <option value="{{ i }}">{{ i }} Star{% if i > 1 %}s{% endif %}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label for="review_text" class="form-label">Your Review</label>
-                        <textarea class="form-control" id="review_text" name="review_text" rows="4" required placeholder="Share your thoughts about this book..."></textarea>
-                    </div>
-                    <div id="review-status" class="mb-2 text-info" style="display:none;"></div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">{% if review_id is defined and review_id %}Update Review{% else %}Submit Review{% endif %}</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
 <script>
-// Example AJAX logic for reviews (requires backend API endpoints)
+function shareBook() {
+    const url = window.location.href;
+    navigator.clipboard.writeText(url);
+    alert('Book link copied to clipboard!');
+}
 document.addEventListener('DOMContentLoaded', function() {
-    // Load reviews
-    function loadReviews() {
-        fetch(`/api/books/{{ book.id }}/reviews`)
-            .then(res => res.json())
-            .then(function(data) {
-                const reviewsList = document.getElementById('reviews-list');
-                reviewsList.innerHTML = '';
-                if (data.reviews && data.reviews.length) {
-                    data.reviews.forEach(function(review) {
-                        const isOwnReview = window.currentUserId && window.currentUserId == review.user_id;
-                        const profileImgSrc = review.profile_image ? `/static/uploads/profiles/${review.profile_image}` : '/static/images/default-profile.png';
-                        reviewsList.innerHTML += `
-                            <div class="border-bottom py-3">
-                                <div class="d-flex align-items-center mb-1">
-                                    <img src="${profileImgSrc}" alt="Profile" class="rounded-circle me-2" style="width:40px;height:40px;object-fit:cover;border:1px solid #ccc;">
-                                    <div class="flex-grow-1">
-                                        <strong>${review.user_name || 'Anonymous'}</strong>
-                                        <span class="text-warning ms-2">${'★'.repeat(review.rating)}${'☆'.repeat(5-review.rating)}</span>
-                                        <small class="text-muted ms-2">${review.created_at}</small>
-                                        ${review.is_approved ? '' : '<span class="badge bg-warning ms-2">Pending Approval</span>'}
-                                    </div>
-                                </div>
-                                <div class="mb-2 ms-5">${review.review_text}</div>
-                                <div class="d-flex gap-2 ms-5">
-                                    <button class='btn btn-sm btn-outline-info me-2' onclick="editReview(${review.id}, ${review.rating}, '${review.review_text.replace(/'/g, "&#39;").replace(/\"/g, '&quot;').replace(/\n/g, ' ')}', ${review.is_approved})" ${isOwnReview ? '' : 'disabled'}>Edit</button>
-                                    <button class='btn btn-sm btn-outline-danger' onclick='deleteReview(${review.id})' ${isOwnReview ? '' : 'disabled'}>Delete</button>
-                                </div>
-                            </div>
-                        `;
-                    });
-                } else {
-                    reviewsList.innerHTML = '<p class="text-muted text-center">No reviews yet. Be the first to review this book!</p>';
-                }
-            });
+    var editBtn = document.getElementById('editReviewBtn');
+    var editForm = document.getElementById('editReviewForm');
+    var displayDiv = document.getElementById('userReviewDisplay');
+    var cancelBtn = document.getElementById('cancelEditBtn');
+    if (editBtn && editForm && displayDiv && cancelBtn) {
+        editBtn.addEventListener('click', function() {
+            editForm.style.display = 'block';
+            displayDiv.style.display = 'none';
+            editBtn.style.display = 'none';
+        });
+        cancelBtn.addEventListener('click', function() {
+            editForm.style.display = 'none';
+            displayDiv.style.display = 'block';
+            editBtn.style.display = 'inline-block';
+        });
     }
-    loadReviews();
-
-    // Add/Edit Review
-    document.getElementById('add-review-btn').onclick = function() {
-        document.getElementById('review_id').value = '';
-        document.getElementById('rating').value = '';
-        document.getElementById('review_text').value = '';
-        new bootstrap.Modal(document.getElementById('reviewModal')).show();
-    };
-    window.editReview = function(id, rating, text, isApproved) {
-        document.getElementById('review_id').value = id;
-        document.getElementById('rating').value = rating;
-        document.getElementById('review_text').value = text;
-        document.getElementById('review-status').style.display = isApproved ? 'none' : 'block';
-        document.getElementById('review-status').textContent = isApproved ? '' : 'Your review is pending approval.';
-        new bootstrap.Modal(document.getElementById('reviewModal')).show();
-    };
-    // Star rating UX logic
-    document.querySelectorAll('#star-rating .star').forEach(function(star) {
-        star.addEventListener('click', function() {
-            const value = this.getAttribute('data-value');
-            document.getElementById('rating').value = value;
-            document.querySelectorAll('#star-rating .star').forEach(function(s, idx) {
-                s.style.color = idx < value ? '#ffc107' : '#e4e5e9';
-            });
-        });
-    });
-    document.getElementById('review-form').onsubmit = function(e) {
-        e.preventDefault();
-        const id = document.getElementById('review_id').value;
-        const rating = parseInt(document.getElementById('rating').value, 10);
-        const text = document.getElementById('review_text').value;
-        fetch(`/api/books/{{ book.id }}/reviews${id ? '/' + id : ''}`, {
-            method: id ? 'PUT' : 'POST',
-            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}' },
-            body: JSON.stringify({ rating, review_text: text })
-        })
-        .then(function(res) { return res.json(); })
-        .then(function() {
-            bootstrap.Modal.getInstance(document.getElementById('reviewModal')).hide();
-            loadReviews();
-        });
-    };
-    window.deleteReview = function(id) {
-        if (confirm('Delete this review?')) {
-            fetch(`/api/books/{{ book.id }}/reviews/${id}`, {
-                method: 'DELETE',
-                headers: { 'X-CSRFToken': '{{ csrf_token() }}' }
-            })
-            .then(function() { loadReviews(); });
-        }
-    };
-
-    // Favorite, Download, Share, Borrow (placeholders)
-    document.getElementById('favorite-btn').onclick = function() {
-        fetch(`/api/books/{{ book.id }}/favorite`, { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token() }}' } })
-            .then(function() { alert('Book marked as favorite!'); });
-    };
-    document.getElementById('download-btn').onclick = function() {
-        fetch(`/api/books/{{ book.id }}/download`, { method: 'GET', headers: { 'X-CSRFToken': '{{ csrf_token() }}' } })
-            .then(function() { alert('Download started!'); });
-    };
-    document.getElementById('share-btn').onclick = function() {
-        if (navigator.share) {
-            navigator.share({ title: '{{ book.title }}', url: window.location.href });
-        } else {
-            alert('Share link copied!');
-        }
-    };
-    document.getElementById('borrow-btn').onclick = function() {
-        fetch(`/api/books/{{ book.id }}/borrow`, { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token() }}' } })
-            .then(function() { alert('Book borrowed!'); });
-    };
 });
 </script>
 {% endblock %}

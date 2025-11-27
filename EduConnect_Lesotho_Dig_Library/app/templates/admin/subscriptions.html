@@ -133,13 +133,13 @@
                                                 <i class="fas fa-edit"></i>
                                             </button>
                                             <button type="button" class="btn btn-outline-danger btn-sm" 
-                                                    onclick="deletePlan({{ plan.id }}, '{{ plan.name }}')" title="Delete">
+                                                    onclick="deletePlan('{{ plan.id }}', '{{ plan.name }}')" title="Delete">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </div>
                                     </td>
                                 </tr>
-                                {% endfor %}
+                                    {% endfor %}
                             </tbody>
                         </table>
                     </div>
@@ -200,33 +200,39 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" action="{{ url_for('admin.add_subscription_plan') }}">
-                {{ csrf_token() }}
+                {{ form.hidden_tag() }}
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Plan Name *</label>
-                        <input type="text" class="form-control" name="name" required>
+                        {{ form.name.label(class="form-label") }}
+                        {{ form.name(class="form-control") }}
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Description</label>
-                        <textarea class="form-control" name="description" rows="3"></textarea>
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control", rows="3") }}
                     </div>
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label class="form-label">Price (LSL) *</label>
-                                <input type="number" class="form-control" name="price" step="0.01" min="0" required>
+                                {{ form.price.label(class="form-label") }}
+                                {{ form.price(class="form-control", step="0.01", min="0") }}
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label class="form-label">Duration (Days) *</label>
-                                <input type="number" class="form-control" name="duration_days" min="1" required>
+                                {{ form.duration_days.label(class="form-label") }}
+                                {{ form.duration_days(class="form-control", min="1") }}
                             </div>
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Maximum Books *</label>
-                        <input type="number" class="form-control" name="max_books" min="1" required>
+                        {{ form.max_books.label(class="form-label") }}
+                        {{ form.max_books(class="form-control", min="1") }}
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            {{ form.is_active(class="form-check-input", id="addPlanActive") }}
+                            {{ form.is_active.label(class="form-check-label", for="addPlanActive") }}
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -249,40 +255,38 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" id="editPlanForm">
-                {{ csrf_token() }}
+                {{ form.csrf_token }}
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label">Plan Name *</label>
-                        <input type="text" class="form-control" name="name" id="editPlanName" required>
+                        {{ form.name.label(class="form-label") }}
+                        {{ form.name(class="form-control", id="editPlanName") }}
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Description</label>
-                        <textarea class="form-control" name="description" id="editPlanDescription" rows="3"></textarea>
+                        {{ form.description.label(class="form-label") }}
+                        {{ form.description(class="form-control", id="editPlanDescription", rows="3") }}
                     </div>
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label class="form-label">Price (LSL) *</label>
-                                <input type="number" class="form-control" name="price" id="editPlanPrice" step="0.01" min="0" required>
+                                {{ form.price.label(class="form-label") }}
+                                {{ form.price(class="form-control", id="editPlanPrice", step="0.01", min="0") }}
                             </div>
                         </div>
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label class="form-label">Duration (Days) *</label>
-                                <input type="number" class="form-control" name="duration_days" id="editPlanDuration" min="1" required>
+                                {{ form.duration_days.label(class="form-label") }}
+                                {{ form.duration_days(class="form-control", id="editPlanDuration", min="1") }}
                             </div>
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Maximum Books *</label>
-                        <input type="number" class="form-control" name="max_books" id="editPlanBooks" min="1" required>
+                        {{ form.max_books.label(class="form-label") }}
+                        {{ form.max_books(class="form-control", id="editPlanBooks", min="1") }}
                     </div>
                     <div class="mb-3">
                         <div class="form-check">
-                            <input class="form-check-input" type="checkbox" name="is_active" id="editPlanActive">
-                            <label class="form-check-label" for="editPlanActive">
-                                Active Plan
-                            </label>
+                            {{ form.is_active(class="form-check-input", id="editPlanActive") }}
+                            {{ form.is_active.label(class="form-check-label", for="editPlanActive") }}
                         </div>
                     </div>
                 </div>
@@ -323,11 +327,12 @@ document.getElementById('editPlanModal').addEventListener('show.bs.modal', funct
 
 function deletePlan(planId, planName) {
     if (confirm(`Are you sure you want to delete the "${planName}" plan? This action cannot be undone.`)) {
+        const csrfToken = document.querySelector('input[name="csrf_token"]').value;
         fetch(`/admin/subscriptions/plans/${planId}/delete`, {
             method: 'DELETE',
             headers: {
-                'X-CSRFToken': '{{ csrf_token() }}'
-            }
+                'X-CSRFToken': csrfToken
+            },
         })
         .then(response => response.json())
         .then(data => {

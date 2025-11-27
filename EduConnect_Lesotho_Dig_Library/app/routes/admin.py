@@ -15,6 +15,105 @@ from functools import wraps
 import os
 from datetime import datetime, date, timedelta
 from decimal import Decimal
+from app.forms import SubscriptionPlanForm
+from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, current_app
+admin_bp = Blueprint('admin', __name__)
+from flask_login import login_required, current_user
+from flask_wtf.csrf import CSRFProtect, generate_csrf
+from app import db
+from app.models.user import User, UserRole
+from app.models.book import Book, Category
+from app.models.borrowing import BorrowingTransaction
+from app.models.review import BookReview
+from app.models.reservation import BookReservation
+from app.models.offline import DigitalDownload, ReadingSession
+from app.models.subscription import SubscriptionPlan, UserSubscription, BillingRecord, Payment
+from werkzeug.utils import secure_filename
+from functools import wraps
+import os
+from datetime import datetime, date, timedelta
+from decimal import Decimal
+from app.forms import SubscriptionPlanForm
+
+
+from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, current_app
+admin_bp = Blueprint('admin', __name__)
+from flask_login import login_required, current_user
+from flask_wtf.csrf import CSRFProtect, generate_csrf
+from app import db
+from app.models.user import User, UserRole
+from app.models.book import Book, Category
+from app.models.borrowing import BorrowingTransaction
+from app.models.review import BookReview
+from app.models.reservation import BookReservation
+from app.models.offline import DigitalDownload, ReadingSession
+from app.models.subscription import SubscriptionPlan, UserSubscription, BillingRecord, Payment
+from werkzeug.utils import secure_filename
+from functools import wraps
+import os
+from datetime import datetime, date, timedelta
+from decimal import Decimal
+from app.forms import SubscriptionPlanForm
+
+
+from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, current_app
+admin_bp = Blueprint('admin', __name__)
+from flask_login import login_required, current_user
+from flask_wtf.csrf import CSRFProtect, generate_csrf
+from app import db
+from app.models.user import User, UserRole
+from app.models.book import Book, Category
+from app.models.borrowing import BorrowingTransaction
+from app.models.review import BookReview
+from app.models.reservation import BookReservation
+from app.models.offline import DigitalDownload, ReadingSession
+from app.models.subscription import SubscriptionPlan, UserSubscription, BillingRecord, Payment
+from werkzeug.utils import secure_filename
+from functools import wraps
+import os
+from datetime import datetime, date, timedelta
+from decimal import Decimal
+from app.forms import SubscriptionPlanForm
+
+
+from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, current_app
+admin_bp = Blueprint('admin', __name__)
+from flask_login import login_required, current_user
+from flask_wtf.csrf import CSRFProtect, generate_csrf
+from app import db
+from app.models.user import User, UserRole
+from app.models.book import Book, Category
+from app.models.borrowing import BorrowingTransaction
+from app.models.review import BookReview
+from app.models.reservation import BookReservation
+from app.models.offline import DigitalDownload, ReadingSession
+from app.models.subscription import SubscriptionPlan, UserSubscription, BillingRecord, Payment
+from werkzeug.utils import secure_filename
+from functools import wraps
+import os
+from datetime import datetime, date, timedelta
+from decimal import Decimal
+from app.forms import SubscriptionPlanForm
+
+
+from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, current_app
+admin_bp = Blueprint('admin', __name__)
+from flask_login import login_required, current_user
+from flask_wtf.csrf import CSRFProtect, generate_csrf
+from app import db
+from app.models.user import User, UserRole
+from app.models.book import Book, Category
+from app.models.borrowing import BorrowingTransaction
+from app.models.review import BookReview
+from app.models.reservation import BookReservation
+from app.models.offline import DigitalDownload, ReadingSession
+from app.models.subscription import SubscriptionPlan, UserSubscription, BillingRecord, Payment
+from werkzeug.utils import secure_filename
+from functools import wraps
+import os
+from datetime import datetime, date, timedelta
+from decimal import Decimal
+from app.forms import SubscriptionPlanForm
 
 def admin_required(f):
     """Decorator to require admin access"""
@@ -1184,6 +1283,30 @@ def review_detail(review_id):
     form = CSRFOnlyForm()
     return render_template('admin/review_detail.html', review=review, form=form)
 
+
+# Route to update review (admin)
+@admin_bp.route('/reviews/<int:review_id>/update', methods=['POST'])
+@librarian_required
+def update_review(review_id):
+    """Update review text and rating"""
+    from app.forms import CSRFOnlyForm
+    review = BookReview.query.get_or_404(review_id)
+    form = CSRFOnlyForm()
+    if form.validate_on_submit():
+        new_text = request.form.get('review_text', '').strip()
+        new_rating = request.form.get('rating', type=int)
+        if new_text and new_rating and 1 <= new_rating <= 5:
+            review.review_text = new_text
+            review.rating = new_rating
+            review.updated_at = datetime.utcnow()
+            db.session.commit()
+            flash('Review updated successfully.', 'success')
+        else:
+            flash('Invalid review data.', 'danger')
+    else:
+        flash('Form validation failed.', 'danger')
+    return redirect(url_for('admin.review_detail', review_id=review.id))
+
 @admin_bp.route('/categories')
 @librarian_required
 def manage_categories():
@@ -1301,54 +1424,54 @@ def subscriptions():
     active_subscriptions = UserSubscription.query.filter_by(is_active=True).count()
     total_revenue = db.session.query(db.func.sum(BillingRecord.amount)).filter_by(status='paid').scalar() or 0
     
+    form = SubscriptionPlanForm()
     return render_template('admin/subscriptions.html',
                          plans=plans,
                          active_subscriptions=active_subscriptions,
-                         total_revenue=total_revenue)
+                         total_revenue=total_revenue,
+                         form=form)
 
 @admin_bp.route('/subscriptions/plans/add', methods=['POST'])
 @admin_required
 def add_subscription_plan():
     """Add new subscription plan"""
-    try:
-        plan = SubscriptionPlan(
-            name=request.form['name'],
-            description=request.form.get('description', ''),
-            price=Decimal(request.form['price']),
-            duration_days=int(request.form['duration_days']),
-            max_books=int(request.form['max_books']),
-            is_active=True
-        )
-        db.session.add(plan)
-        db.session.commit()
-        flash(f'Subscription plan "{plan.name}" created successfully!', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Error creating subscription plan: {str(e)}', 'error')
-    
+    form = SubscriptionPlanForm()
+    if form.validate_on_submit():
+        try:
+            plan = SubscriptionPlan(
+                name=form.name.data,
+                description=form.description.data,
+                price=form.price.data,
+                duration_days=form.duration_days.data,
+                max_books=form.max_books.data,
+                is_active=form.is_active.data
+            )
+            db.session.add(plan)
+            db.session.commit()
+            flash(f'Subscription plan "{plan.name}" created successfully!', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error creating subscription plan: {str(e)}', 'error')
+    else:
+        flash('Form validation failed. Please check your input.', 'error')
     return redirect(url_for('admin.subscriptions'))
 
-@admin_bp.route('/subscriptions/plans/<int:plan_id>/edit', methods=['POST'])
+@admin_bp.route('/subscriptions/plans/<int:plan_id>/edit', methods=['GET', 'POST'])
 @admin_required
 def edit_subscription_plan(plan_id):
     """Edit subscription plan"""
     plan = SubscriptionPlan.query.get_or_404(plan_id)
-    
-    try:
-        plan.name = request.form['name']
-        plan.description = request.form.get('description', '')
-        plan.price = Decimal(request.form['price'])
-        plan.duration_days = int(request.form['duration_days'])
-        plan.max_books = int(request.form['max_books'])
-        plan.is_active = request.form.get('is_active') == 'on'
-        
-        db.session.commit()
-        flash(f'Subscription plan "{plan.name}" updated successfully!', 'success')
-    except Exception as e:
-        db.session.rollback()
-        flash(f'Error updating subscription plan: {str(e)}', 'error')
-    
-    return redirect(url_for('admin.subscriptions'))
+    form = SubscriptionPlanForm(obj=plan)
+    if form.validate_on_submit():
+        try:
+            form.populate_obj(plan)
+            db.session.commit()
+            flash(f'Subscription plan "{plan.name}" updated successfully!', 'success')
+            return redirect(url_for('admin.subscriptions'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating subscription plan: {str(e)}', 'error')
+    return render_template('admin/subscriptions.html', form=form, plans=SubscriptionPlan.query.order_by(SubscriptionPlan.price).all())
 
 @admin_bp.route('/subscriptions/plans/<int:plan_id>/delete', methods=['DELETE'])
 @admin_required
@@ -1480,6 +1603,7 @@ def user_subscriptions():
     return render_template('admin/user_subscriptions.html',
                          subscriptions=subscriptions,
                          pagination=pagination)
+
 
 @admin_bp.route('/subscription/<int:subscription_id>/extend', methods=['POST'])
 @admin_required

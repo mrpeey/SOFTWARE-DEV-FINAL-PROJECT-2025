@@ -1,3 +1,5 @@
+{# eslint-disable #}
+{# prettier-ignore #}
 {% extends "base.html" %}
 
 {% block title %}Review Details - Admin - {{ library_name }}{% endblock %}
@@ -21,11 +23,11 @@
                             {% if review.book.cover_image %}
                                 {% if review.book.cover_image.endswith('.svg') and review.book.svg_content %}
                                     <div class="img-fluid rounded shadow-sm mb-3">{{ review.book.svg_content|safe }}</div>
-                                {% else %}
                                     <img src="{{ url_for('static', filename=review.book.cover_image) }}" alt="{{ review.book.title }}" class="img-fluid rounded shadow-sm mb-3">
                                 {% endif %}
                             {% else %}
-                                {% include 'shared/book_cover_svg.html' with context %}
+                                {% set book = review.book %}
+                                {% include 'shared/book_cover_svg.html' %}
                             {% endif %}
                         </div>
                         <div class="col-md-8">
@@ -34,9 +36,7 @@
                         </div>
                     </div>
                     <div class="mt-2 mb-3">
-                        <button type="button" class="btn btn-info" id="shareBtn" data-bs-toggle="modal" data-bs-target="#shareModal">
-                            <i class="fas fa-share-alt me-1"></i>Share
-                        </button>
+                                <script>
                     </div>
 
 <!-- Share Modal -->
@@ -50,6 +50,9 @@
             <div class="modal-body">
                 <p>Share this book using:</p>
                 <div class="d-flex flex-column gap-2">
+                                                    <div class="mb-2">
+                                                        <strong>Rating:</strong>
+                                                        <span class="text-warning">{{ '★' * review.rating }}{{ '☆' * (5-review.rating) }}</span>
                     <a id="shareEmail" class="btn btn-outline-primary" target="_blank"><i class="fas fa-envelope me-1"></i>Email</a>
                     <a id="shareWhatsApp" class="btn btn-outline-success" target="_blank"><i class="fab fa-whatsapp me-1"></i>WhatsApp</a>
                     <a id="shareFacebook" class="btn btn-outline-info" target="_blank"><i class="fab fa-facebook me-1"></i>Facebook</a>
@@ -62,8 +65,8 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    var bookUrl = window.location.href;
-    var bookTitle = document.querySelector('h2').innerText;
+    var bookUrl = "{{ url_for('main.book_detail', book_id=review.book.id, _external=True) }}";
+    var bookTitle = "{{ review.book.title|escapejs }}";
     document.getElementById('shareEmail').href = `mailto:?subject=Check out this book: ${bookTitle}&body=View it here: ${bookUrl}`;
     document.getElementById('shareWhatsApp').href = `https://wa.me/?text=Check out this book: ${bookTitle} - ${bookUrl}`;
     document.getElementById('shareFacebook').href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(bookUrl)}`;
@@ -73,9 +76,9 @@ document.addEventListener('DOMContentLoaded', function() {
         setTimeout(() => { this.innerHTML = '<i class="fas fa-link me-1"></i>Copy Link'; }, 1500);
     };
 });
-</script>
-                    <h6 class="card-subtitle mb-2 text-muted">User: {{ review.user.get_full_name() if review.user else 'Unknown' }}</h6>
                     <div class="mb-2">
+<script>
+/* eslint-disable */
                         <strong>Rating:</strong>
                         <span class="text-warning">{{ '★' * review.rating }}{{ '☆' * (5-review.rating) }}</span>
                     </div>
@@ -95,34 +98,59 @@ document.addEventListener('DOMContentLoaded', function() {
                         <p class="mt-2">{{ review.review_text }}</p>
                     </div>
                     <div class="mt-3">
-                            {% if not review.is_approved %}
-                            <form method="post" action="{{ url_for('admin.approve_review', review_id=review.id) }}">
-                                {{ form.csrf_token }}
-                                <button type="submit" class="btn btn-success">Approve Review</button>
-                            </form>
-                            {% endif %}
-                            <form method="post" action="{{ url_for('admin.delete_review', review_id=review.id) }}" onsubmit="return confirm('Are you sure you want to delete this review?');">
-                                {{ form.csrf_token }}
-                                <button type="submit" class="btn btn-danger">Delete Review</button>
-                            </form>
+                        {% if not review.is_approved %}
+                        <form method="post" action="{{ url_for('admin.approve_review', review_id=review.id) }}">
+                            {{ form.csrf_token }}
+                            <button type="submit" class="btn btn-success">Approve Review</button>
+                        </form>
+                        {% endif %}
+                        <form method="post" action="{{ url_for('admin.delete_review', review_id=review.id) }}" onsubmit="return confirm('Are you sure you want to delete this review?');">
+                            {{ form.csrf_token }}
+                            <button type="submit" class="btn btn-danger">Delete Review</button>
+                        </form>
+                        <button id="editReviewBtn" class="btn btn-primary mt-2">Edit Review</button>
+                        <form id="editReviewForm" method="post" action="{{ url_for('admin.update_review', review_id=review.id) }}" style="display:none;" class="mt-3">
+                            {{ form.csrf_token }}
+                            <div class="mb-2">
+                                <label for="editRating" class="form-label"><strong>Rating:</strong></label>
+                                <select id="editRating" name="rating" class="form-select" required>
+                                    {% for r in range(1,6) %}
+                                    <option value="{{ r }}" {% if review.rating == r %}selected{% endif %}>{{ r }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <label for="editReviewText" class="form-label"><strong>Review Text:</strong></label>
+                                <textarea id="editReviewText" name="review_text" class="form-control" rows="4" required>{{ review.review_text }}</textarea>
+                            </div>
+                            <button type="submit" class="btn btn-success">Update Review</button>
+                            <button type="button" id="cancelEditBtn" class="btn btn-secondary ms-2">Cancel</button>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    var bookUrl = window.location.origin + '/book/' + "{{ review.book.id }}";
-    var bookTitle = "{{ review.book.title|e|escapejs }}";
-    document.getElementById('shareEmail').href = `mailto:?subject=Check out this book: ${bookTitle}&body=View it here: ${bookUrl}`;
-    document.getElementById('shareWhatsApp').href = `https://wa.me/?text=Check out this book: ${bookTitle} - ${bookUrl}`;
-    document.getElementById('shareFacebook').href = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(bookUrl)}`;
-    document.getElementById('shareCopy').onclick = function() {
-        navigator.clipboard.writeText(bookUrl);
-        this.innerText = 'Copied!';
-        setTimeout(() => { this.innerHTML = '<i class="fas fa-link me-1"></i>Copy Link'; }, 1500);
-    };
+    // ...existing code...
+    var editBtn = document.getElementById('editReviewBtn');
+    var editForm = document.getElementById('editReviewForm');
+    var cancelBtn = document.getElementById('cancelEditBtn');
+    if (editBtn && editForm) {
+        editBtn.addEventListener('click', function() {
+            editForm.style.display = 'block';
+            editBtn.style.display = 'none';
+        });
+    }
+    if (cancelBtn && editForm && editBtn) {
+        cancelBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            editForm.style.display = 'none';
+            editBtn.style.display = 'inline-block';
+        });
+    }
 });
 </script>
 {% endblock %}

@@ -1,6 +1,13 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="container mt-4">
+  <div class="mb-3 d-flex gap-2">
+    <div class="w-100 d-flex justify-content-end gap-2">
+      <a href="{{ url_for('main.index') }}" class="btn btn-light">
+        <i class="fas fa-home me-1"></i>Back to Home
+      </a>
+    </div>
+  </div>
   <h2 class="mb-4">My Subscribed Books</h2>
   <div class="row">
     {% for book in subscribed_books %}

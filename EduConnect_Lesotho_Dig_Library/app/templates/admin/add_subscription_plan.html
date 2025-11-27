@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Add Subscription Plan - {{ library_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-plus me-2"></i>Add Subscription Plan
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('admin.add_subscription_plan') }}">
+                        {{ form.hidden_tag() }}
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Plan Name</label>
+                            {{ form.name(class="form-control", id="name") }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description</label>
+                            {{ form.description(class="form-control", id="description") }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="price" class="form-label">Price (LSL)</label>
+                            {{ form.price(class="form-control", id="price") }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="duration_days" class="form-label">Duration (Days)</label>
+                            {{ form.duration_days(class="form-control", id="duration_days") }}
+                        </div>
+                        <div class="mb-3">
+                            <label for="max_books" class="form-label">Maximum Books</label>
+                            {{ form.max_books(class="form-control", id="max_books") }}
+                        </div>
+                        <div class="form-check mb-3">
+                            {{ form.is_active(class="form-check-input", id="is_active") }}
+                            <label class="form-check-label" for="is_active">Active</label>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100">
+                            <i class="fas fa-save me-2"></i>Add Plan
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

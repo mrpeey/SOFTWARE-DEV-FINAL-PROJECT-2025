@@ -16,7 +16,7 @@
         </thead>
         <tbody>
             {% for sub in subscriptions %}
-            <tr>
+                <form method="POST" action="{{ url_for('admin.user_subscriptions', subscription_id=sub.id) }}" style="display:inline-block;">
                 <td>
                     {% if sub.user %}
                         {{ sub.user.get_full_name() }}
@@ -32,23 +32,23 @@
                     {% endif %}
                 </td>
                 <td>
+                    {% set status = 'Active' if sub.is_active and not sub.is_expired else 'Expired' if sub.is_expired else 'Inactive' %}
                     <span class="badge bg-
-                        {% if sub.status == 'active' %}success
-                        {% elif sub.status == 'pending' %}warning
-                        {% elif sub.status == 'declined' %}danger
+                        {% if status == 'Active' %}success
+                        {% elif status == 'Expired' %}danger
                         {% else %}secondary
                         {% endif %}">
-                        {{ sub.status.title() }}
+                        {{ status }}
                     </span>
                 </td>
                 <td>{{ sub.start_date.strftime('%Y-%m-%d') if sub.start_date else 'N/A' }}</td>
                 <td>{{ sub.end_date.strftime('%Y-%m-%d') if sub.end_date else 'N/A' }}</td>
                 <td>
-                    {% if sub.status == 'pending' %}
-                        <form method="POST" action="{{ url_for('admin.approve_user_subscription', subscription_id=sub.id) }}" style="display:inline-block;">
+                    {% if not sub.is_active and not sub.is_expired %}
+                        <form method="POST" action="{{ url_for('admin.user_subscriptions', subscription_id=sub.id) }}" style="display:inline-block;">
                             <button type="submit" class="btn btn-success btn-sm">Approve</button>
                         </form>
-                        <form method="POST" action="{{ url_for('admin.decline_user_subscription', subscription_id=sub.id) }}" style="display:inline-block;">
+                        <form method="POST" action="{{ url_for('admin.user_subscriptions', subscription_id=sub.id) }}" style="display:inline-block;">
                             <button type="submit" class="btn btn-danger btn-sm">Decline</button>
                         </form>
                     {% elif sub.status == 'active' %}
