@@ -1,6 +1,5 @@
 from flask import Blueprint, request, jsonify
-import os
-import requests
+import os, requests
 
 gemini_chat_bp = Blueprint('gemini_chat', __name__)
 

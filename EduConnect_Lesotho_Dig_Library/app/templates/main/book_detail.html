@@ -41,27 +41,7 @@ window.currentUserId = "{{ current_user.id if current_user.is_authenticated else
                 {% if book.cover_image %}
                     <img src="{{ url_for('static', filename='uploads/covers/' + book.cover_image) }}" class="w-100 shadow rounded" alt="Book Cover" style="border-radius:16px; max-width:100%; height:340px; object-fit:cover;">
                 {% else %}
-                    {% set category_colors = {
-                        'Academic': ['#3b82f6', '#60a5fa'],
-                        'Literature': ['#a855f7', '#f472b6'],
-                        'Science': ['#14b8a6', '#06b6d4'],
-                        'Technology': ['#0ea5e9', '#6366f1'],
-                        'History': ['#f59e42', '#fbbf24'],
-                        'Culture': ['#f43f5e', '#fb7185'],
-                        'Health': ['#22c55e', '#4ade80'],
-                        'Medicine': ['#eab308', '#fde68a'],
-                        'Agriculture': ['#84cc16', '#a3e635'],
-                        'Business': ['#f97316', '#fbbf24'],
-                        'Economics': ['#e11d48', '#f472b6'],
-                        'Government': ['#6366f1', '#818cf8'],
-                        'Law': ['#f43f5e', '#e11d48'],
-                        'Digital': ['#0ea5e9', '#38bdf8'],
-                        'Literacy': ['#a855f7', '#6366f1'],
-                        'Local': ['#f59e42', '#fbbf24']
-                    } %}
-                    {% set cat_colors = category_colors.get(book.category.name.split(' ')[0] if book.category else '', ['#764ba2', '#a855f7']) %}
-                    {% set title_length = book.title|length %}
-                    {% set author_length = book.author|length %}
+                    {% include 'shared/book_cover_svg.html' %}
                     {% set svg_height = 340 %}
                     {% set svg_width = 340 %}
                     <svg width="100%" height="{{ svg_height }}" viewBox="0 0 {{ svg_width }} {{ svg_height }}" xmlns="http://www.w3.org/2000/svg" style="background: #f8f9fa; border-radius: 16px;">
@@ -166,14 +146,29 @@ window.currentUserId = "{{ current_user.id if current_user.is_authenticated else
             {% endif %}
             <div class="mb-3">
                 {% if current_user.is_authenticated %}
-                    {% if user_review %}
-                        <button class="btn btn-warning btn-sm me-2" id="editReviewBtn">Edit Your Review</button>
-                        <form action="{{ url_for('books.delete_review', book_id=book.id, review_id=user_review.id) }}" method="post" style="display:inline;">
-                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete your review?');">Delete Your Review</button>
-                        </form>
-                    {% else %}
-                        <a href="{{ url_for('books.review_book', book_id=book.id) }}" class="btn btn-primary btn-sm">Write a Review</a>
-                    {% endif %}
+                    <div id="reviewActions">
+                        {% if user_review %}
+                            <button class="btn btn-warning btn-sm me-2" id="editReviewBtn">Edit Your Review</button>
+                            <button class="btn btn-danger btn-sm" id="deleteReviewBtn">Delete Your Review</button>
+                        {% else %}
+                            <button class="btn btn-primary btn-sm" id="writeReviewBtn">Write a Review</button>
+                        {% endif %}
+                    </div>
+                    <form id="ajaxReviewForm" style="display:none;" autocomplete="off">
+                        <div class="mb-2">
+                            <textarea name="review_text" id="reviewText" class="form-control" rows="3">{% if user_review %}{{ user_review.review_text }}{% endif %}</textarea>
+                        </div>
+                        <div class="mb-2">
+                            <label for="rating" class="form-label">Rating:</label>
+                            <select name="rating" id="reviewRating" class="form-select" style="width:auto; display:inline-block;">
+                                {% for i in range(1, 6) %}
+                                    <option value="{{ i }}" {% if user_review and user_review.rating == i %}selected{% endif %}>{{ i }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-success btn-sm me-2">Save</button>
+                        <button type="button" class="btn btn-secondary btn-sm" id="cancelReviewBtn">Cancel</button>
+                    </form>
                 {% endif %}
             </div>
             {% if reviews %}
@@ -229,21 +224,74 @@ function shareBook() {
     alert('Book link copied to clipboard!');
 }
 document.addEventListener('DOMContentLoaded', function() {
-    var editBtn = document.getElementById('editReviewBtn');
-    var editForm = document.getElementById('editReviewForm');
-    var displayDiv = document.getElementById('userReviewDisplay');
-    var cancelBtn = document.getElementById('cancelEditBtn');
-    if (editBtn && editForm && displayDiv && cancelBtn) {
-        editBtn.addEventListener('click', function() {
-            editForm.style.display = 'block';
-            displayDiv.style.display = 'none';
-            editBtn.style.display = 'none';
-        });
-        cancelBtn.addEventListener('click', function() {
-            editForm.style.display = 'none';
-            displayDiv.style.display = 'block';
-            editBtn.style.display = 'inline-block';
-        });
+    const reviewActions = document.getElementById('reviewActions');
+    const ajaxReviewForm = document.getElementById('ajaxReviewForm');
+    const writeBtn = document.getElementById('writeReviewBtn');
+    const editBtn = document.getElementById('editReviewBtn');
+    const deleteBtn = document.getElementById('deleteReviewBtn');
+    const cancelBtn = document.getElementById('cancelReviewBtn');
+    const reviewText = document.getElementById('reviewText');
+    const reviewRating = document.getElementById('reviewRating');
+    const bookId = {{ book.id }};
+    const userReviewId = {{ user_review.id if user_review else 'null' }};
+
+    function showForm(isEdit) {
+        ajaxReviewForm.style.display = 'block';
+        reviewActions.style.display = 'none';
+        if (!isEdit) {
+            reviewText.value = '';
+            reviewRating.value = '5';
+        }
+    }
+    function hideForm() {
+        ajaxReviewForm.style.display = 'none';
+        reviewActions.style.display = 'block';
+    }
+    if (writeBtn) writeBtn.onclick = () => showForm(false);
+    if (editBtn) editBtn.onclick = () => showForm(true);
+    if (cancelBtn) cancelBtn.onclick = hideForm;
+    if (ajaxReviewForm) {
+        ajaxReviewForm.onsubmit = function(e) {
+            e.preventDefault();
+            const text = reviewText.value.trim();
+            const rating = reviewRating.value;
+            if (!text || text.length < 10) {
+                alert('Review must be at least 10 characters.');
+                return;
+            }
+            const url = userReviewId ? `/books/api/review/${bookId}/${userReviewId}` : `/books/api/review/${bookId}`;
+            const method = userReviewId ? 'PUT' : 'POST';
+            fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ rating: parseInt(rating), content: text })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'Error saving review.');
+                }
+            });
+        };
+    }
+    if (deleteBtn) {
+        deleteBtn.onclick = function() {
+            if (!confirm('Are you sure you want to delete your review?')) return;
+            fetch(`/books/api/review/${bookId}/${userReviewId}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert(data.message || 'Error deleting review.');
+                }
+            });
+        };
     }
 });
 </script>

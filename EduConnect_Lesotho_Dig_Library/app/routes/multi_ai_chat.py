@@ -1,6 +1,5 @@
 from flask import Blueprint, request, jsonify
-import os
-import requests
+import os, requests
 
 multi_ai_chat_bp = Blueprint('multi_ai_chat', __name__)
 

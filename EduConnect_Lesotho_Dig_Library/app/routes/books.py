@@ -1,3 +1,4 @@
+
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, send_file, current_app
 from flask_login import login_required, current_user
 from app import db
@@ -12,6 +13,96 @@ import os
 from datetime import datetime, date, timedelta
 
 books_bp = Blueprint('books', __name__)
+
+
+from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, send_file, current_app
+from flask_login import login_required, current_user
+from app import db
+from app.models.book import Book, Category
+from app.models.borrowing import BorrowingTransaction
+from app.models.review import BookReview
+from app.models.reservation import BookReservation
+from app.models.offline import DigitalDownload, ReadingSession
+from app.models.user import UserRole
+from werkzeug.utils import secure_filename
+import os
+from datetime import datetime, date, timedelta
+
+books_bp = Blueprint('books', __name__)
+
+@books_bp.route('/api/review/<int:book_id>', methods=['POST'])
+@login_required
+def api_create_review(book_id):
+    rating = request.json.get('rating', type=int)
+    content = request.json.get('content', '').strip()
+    if not rating or rating < 1 or rating > 5:
+        return jsonify({'success': False, 'message': 'Invalid rating'}), 400
+    if not content or len(content) < 10:
+        return jsonify({'success': False, 'message': 'Review too short'}), 400
+    review = BookReview(
+        user_id=current_user.id,
+        book_id=book_id,
+        rating=rating,
+        review_text=content,
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
+        is_approved=False
+    )
+    try:
+        db.session.add(review)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Review submitted', 'review_id': review.id})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, send_file, current_app
+from flask_login import login_required, current_user
+from app import db
+from app.models.book import Book, Category
+from app.models.borrowing import BorrowingTransaction
+from app.models.review import BookReview
+from app.models.reservation import BookReservation
+from app.models.offline import DigitalDownload, ReadingSession
+from app.models.user import UserRole
+from werkzeug.utils import secure_filename
+import os
+from datetime import datetime, date, timedelta
+
+books_bp = Blueprint('books', __name__)
+
+@books_bp.route('/api/review/<int:book_id>/<int:review_id>', methods=['PUT'])
+@login_required
+def api_edit_review(book_id, review_id):
+    review = BookReview.query.filter_by(id=review_id, user_id=current_user.id, book_id=book_id).first_or_404()
+    rating = request.json.get('rating', type=int)
+    content = request.json.get('content', '').strip()
+    if not rating or rating < 1 or rating > 5:
+        return jsonify({'success': False, 'message': 'Invalid rating'}), 400
+    if not content or len(content) < 10:
+        return jsonify({'success': False, 'message': 'Review too short'}), 400
+    review.rating = rating
+    review.review_text = content
+    review.updated_at = datetime.utcnow()
+    review.is_approved = False
+    try:
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Review updated'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+@books_bp.route('/api/review/<int:book_id>/<int:review_id>', methods=['DELETE'])
+@login_required
+def api_delete_review(book_id, review_id):
+    review = BookReview.query.filter_by(id=review_id, user_id=current_user.id, book_id=book_id).first_or_404()
+    try:
+        db.session.delete(review)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Review deleted'})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 @books_bp.route('/borrow/confirm/<int:book_id>', methods=['GET', 'POST'])
 @login_required
@@ -445,19 +536,24 @@ def review_book(book_id):
     form = CSRFOnlyForm()
 
     if request.method == 'POST':
+        current_app.logger.info('POST request received for review_book')
         rating = request.form.get('rating', type=int)
         content = request.form.get('content', '').strip()
+        current_app.logger.info(f'Form data: rating={rating}, content={content}')
 
         # Validation
         if not rating or rating < 1 or rating > 5:
             flash('Please provide a rating between 1 and 5 stars.', 'error')
+            current_app.logger.warning('Rating validation failed')
             return render_template('books/review.html', book=book, existing_review=existing_review, form=form)
         if not content or len(content) < 10:
             flash('Your review should be at least 10 characters long.', 'error')
+            current_app.logger.warning('Content validation failed')
             return render_template('books/review.html', book=book, existing_review=existing_review, form=form)
 
         if existing_review:
             # Update existing review
+            current_app.logger.info('Updating existing review')
             existing_review.rating = rating
             existing_review.review_text = content
             existing_review.updated_at = datetime.utcnow()
@@ -465,6 +561,7 @@ def review_book(book_id):
             try:
                 db.session.commit()
                 flash('Your review has been updated and is pending approval.', 'success')
+                current_app.logger.info('Review updated and committed')
                 return redirect(url_for('main.book_detail', book_id=book_id))
             except Exception as e:
                 db.session.rollback()
@@ -472,6 +569,7 @@ def review_book(book_id):
                 current_app.logger.error(f'Review update error: {str(e)}')
         else:
             # Create new review
+            current_app.logger.info('Creating new review')
             review = BookReview(
                 user_id=current_user.id,
                 book_id=book_id,
@@ -485,11 +583,8 @@ def review_book(book_id):
                 db.session.add(review)
                 db.session.commit()
                 flash('Your review has been submitted and is pending approval.', 'success')
+                current_app.logger.info('Review created and committed')
                 return redirect(url_for('main.book_detail', book_id=book_id))
-            except Exception as e:
-                db.session.rollback()
-                flash('An error occurred while submitting your review.', 'error')
-                current_app.logger.error(f'Review submission error: {str(e)}')
             except Exception as e:
                 db.session.rollback()
                 flash('An error occurred while submitting your review.', 'error')

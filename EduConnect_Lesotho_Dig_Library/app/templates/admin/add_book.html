@@ -29,8 +29,17 @@
                     <h4 class="mb-0"><i class="fas fa-book me-2"></i>Book Information</h4>
                 </div>
                 <div class="card-body">
-                    <form method="POST" enctype="multipart/form-data" id="addBookForm">
+                    <form method="POST" enctype="multipart/form-data" id="addBookForm" aria-label="Add New Book Form">
                         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        {% if errors %}
+                        <div class="alert alert-danger" role="alert">
+                            <ul class="mb-0">
+                                {% for error in errors %}
+                                <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
                         
                         <!-- Basic Information -->
                         <div class="row mb-4">
@@ -40,26 +49,23 @@
                             
                             <div class="col-md-8 mb-3">
                                 <label for="title" class="form-label"><strong>Title *</strong></label>
-                                <input type="text" class="form-control" id="title" name="title" required
-                                       placeholder="Enter book title">
+                                    <input type="text" class="form-control" id="title" name="title" required aria-required="true" aria-label="Book Title" placeholder="Enter book title">
                             </div>
                             
                             <div class="col-md-4 mb-3">
                                 <label for="isbn" class="form-label"><strong>ISBN</strong></label>
-                                <input type="text" class="form-control" id="isbn" name="isbn"
-                                       placeholder="978-0-123456-78-9">
+                                    <input type="text" class="form-control" id="isbn" name="isbn" aria-label="ISBN" placeholder="978-0-123456-78-9">
                                 <div class="form-text">International Standard Book Number</div>
                             </div>
                             
                             <div class="col-md-6 mb-3">
                                 <label for="author" class="form-label"><strong>Author *</strong></label>
-                                <input type="text" class="form-control" id="author" name="author" required
-                                       placeholder="Author name">
+                                    <input type="text" class="form-control" id="author" name="author" required aria-required="true" aria-label="Author" placeholder="Author name">
                             </div>
                             
                             <div class="col-md-6 mb-3">
                                 <label for="category_id" class="form-label"><strong>Category *</strong></label>
-                                <select class="form-select" id="category_id" name="category_id" required>
+                                <select class="form-select" id="category_id" name="category_id" required aria-required="true" aria-label="Category">
                                     <option value="">Select a category</option>
                                     {% for category in categories %}
                                     <option value="{{ category.id }}">{{ category.name }}</option>
@@ -69,8 +75,7 @@
                             
                             <div class="col-12 mb-3">
                                 <label for="description" class="form-label"><strong>Description</strong></label>
-                                <textarea class="form-control" id="description" name="description" rows="4"
-                                          placeholder="Brief description of the book"></textarea>
+                                <textarea class="form-control" id="description" name="description" rows="4" aria-label="Description" placeholder="Brief description of the book"></textarea>
                                 <div class="form-text">
                                     <span id="desc-count">0</span>/500 characters
                                 </div>
@@ -85,24 +90,22 @@
                             
                             <div class="col-md-6 mb-3">
                                 <label for="publisher" class="form-label"><strong>Publisher</strong></label>
-                                <input type="text" class="form-control" id="publisher" name="publisher"
-                                       placeholder="Publisher name">
+                                    <input type="text" class="form-control" id="publisher" name="publisher" aria-label="Publisher" placeholder="Publisher name">
                             </div>
                             
                             <div class="col-md-3 mb-3">
                                 <label for="publication_date" class="form-label"><strong>Publication Date</strong></label>
-                                <input type="date" class="form-control" id="publication_date" name="publication_date">
+                                <input type="date" class="form-control" id="publication_date" name="publication_date" aria-label="Publication Date">
                             </div>
                             
                             <div class="col-md-3 mb-3">
                                 <label for="pages" class="form-label"><strong>Pages</strong></label>
-                                <input type="number" class="form-control" id="pages" name="pages" min="1"
-                                       placeholder="Number of pages">
+                                    <input type="number" class="form-control" id="pages" name="pages" min="1" aria-label="Pages" placeholder="Number of pages">
                             </div>
                             
                             <div class="col-md-6 mb-3">
                                 <label for="language" class="form-label"><strong>Language</strong></label>
-                                <select class="form-select" id="language" name="language">
+                                <select class="form-select" id="language" name="language" aria-label="Language">
                                     <option value="">Select language</option>
                                     <option value="English">English</option>
                                     <option value="Sesotho">Sesotho</option>
@@ -115,8 +118,7 @@
                             
                             <div class="col-md-6 mb-3">
                                 <label for="edition" class="form-label"><strong>Edition</strong></label>
-                                <input type="text" class="form-control" id="edition" name="edition"
-                                       placeholder="e.g., 1st Edition, Revised">
+                                    <input type="text" class="form-control" id="edition" name="edition" aria-label="Edition" placeholder="e.g., 1st Edition, Revised">
                             </div>
                         </div>
 
@@ -128,20 +130,17 @@
                             
                             <div class="col-md-4 mb-3">
                                 <label for="total_copies" class="form-label"><strong>Total Copies *</strong></label>
-                                <input type="number" class="form-control" id="total_copies" name="total_copies" 
-                                       min="1" value="1" required>
+                                    <input type="number" class="form-control" id="total_copies" name="total_copies" min="1" value="1" required aria-required="true" aria-label="Total Copies">
                             </div>
                             
                             <div class="col-md-4 mb-3">
                                 <label for="available_copies" class="form-label"><strong>Available Copies *</strong></label>
-                                <input type="number" class="form-control" id="available_copies" name="available_copies" 
-                                       min="0" value="1" required>
+                                    <input type="number" class="form-control" id="available_copies" name="available_copies" min="0" value="1" required aria-required="true" aria-label="Available Copies">
                             </div>
                             
                             <div class="col-md-4 mb-3">
                                 <label for="location" class="form-label"><strong>Shelf Location</strong></label>
-                                <input type="text" class="form-control" id="location" name="location"
-                                       placeholder="e.g., A1-B3, Section 2">
+                                    <input type="text" class="form-control" id="location" name="location" aria-label="Shelf Location" placeholder="e.g., A1-B3, Section 2">
                             </div>
                         </div>
 
@@ -153,7 +152,7 @@
                             
                             <div class="col-12 mb-3">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="is_digital" name="is_digital">
+                                    <input class="form-check-input" type="checkbox" id="is_digital" name="is_digital" aria-label="Digital Book">
                                     <label class="form-check-label" for="is_digital">
                                         <strong>This is a digital book</strong>
                                     </label>
@@ -164,15 +163,13 @@
                             <div id="digital-options" style="display: none;">
                                 <div class="col-12 mb-3">
                                     <label for="file_upload" class="form-label"><strong>Upload Book File</strong></label>
-                                    <input type="file" class="form-control" id="file_upload" name="file_upload"
-                                           accept=".pdf,.epub,.txt,.doc,.docx">
+                                     <input type="file" class="form-control" id="file_upload" name="file_upload" accept=".pdf,.epub,.txt,.doc,.docx" aria-label="Upload Book File">
                                     <div class="form-text">Supported formats: PDF, EPUB, TXT, DOC, DOCX (Max: 50MB)</div>
                                 </div>
                                 
                                 <div class="col-12 mb-3">
                                     <label for="download_url" class="form-label"><strong>Or External Download URL</strong></label>
-                                    <input type="url" class="form-control" id="download_url" name="download_url"
-                                           placeholder="https://example.com/book.pdf">
+                                     <input type="url" class="form-control" id="download_url" name="download_url" aria-label="External Download URL" placeholder="https://example.com/book.pdf">
                                     <div class="form-text">Alternative to file upload</div>
                                 </div>
                             </div>
@@ -186,8 +183,7 @@
                             
                             <div class="col-md-6 mb-3">
                                 <label for="cover_image" class="form-label"><strong>Upload Cover Image</strong></label>
-                                <input type="file" class="form-control" id="cover_image" name="cover_image"
-                                       accept="image/*">
+                                    <input type="file" class="form-control" id="cover_image" name="cover_image" accept="image/*" aria-label="Upload Cover Image">
                                 <div class="form-text">Recommended: 300x400px, JPG/PNG format</div>
                             </div>
                             
@@ -207,14 +203,13 @@
                             
                             <div class="col-md-6 mb-3">
                                 <label for="tags" class="form-label"><strong>Tags</strong></label>
-                                <input type="text" class="form-control" id="tags" name="tags"
-                                       placeholder="education, fiction, history (comma-separated)">
+                                    <input type="text" class="form-control" id="tags" name="tags" aria-label="Tags" placeholder="education, fiction, history (comma-separated)">
                                 <div class="form-text">Separate tags with commas</div>
                             </div>
                             
                             <div class="col-md-6 mb-3">
                                 <label for="reading_level" class="form-label"><strong>Reading Level</strong></label>
-                                <select class="form-select" id="reading_level" name="reading_level">
+                                <select class="form-select" id="reading_level" name="reading_level" aria-label="Reading Level">
                                     <option value="">Select reading level</option>
                                     <option value="Beginner">Beginner</option>
                                     <option value="Intermediate">Intermediate</option>
@@ -227,7 +222,7 @@
                             
                             <div class="col-12 mb-3">
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured">
+                                    <input class="form-check-input" type="checkbox" id="is_featured" name="is_featured" aria-label="Feature Book">
                                     <label class="form-check-label" for="is_featured">
                                         <strong><i class="fas fa-star me-1 text-warning"></i>Feature this book on homepage</strong>
                                         <small class="text-muted d-block">Featured books appear in the top section of the homepage</small>

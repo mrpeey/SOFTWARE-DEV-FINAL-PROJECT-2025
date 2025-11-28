@@ -19,7 +19,10 @@
                 <form method="POST" action="{{ url_for('admin.user_subscriptions', subscription_id=sub.id) }}" style="display:inline-block;">
                 <td>
                     {% if sub.user %}
-                        {{ sub.user.get_full_name() }}
+                        {{ sub.user.get_full_name() }}<br>
+                        <span class="badge bg-info">{{ sub.user.role.role_name|capitalize }}</span>
+                    {% elif sub.user_id %}
+                        User ID: {{ sub.user_id }}
                     {% else %}
                         <span class="text-danger">Unknown User</span>
                     {% endif %}

@@ -1,14 +1,10 @@
 from flask import Blueprint, request, jsonify, session, render_template
-import os
-import requests
-import openai
+import os, requests, openai, logging, json
 from app.models.book import Book
 from app.models.review import BookReview
 from app.models.user import User
 from app import db
 from flask_login import login_required, current_user
-import logging
-import json
 
 ai_chat_bp = Blueprint('ai_chat', __name__)
 

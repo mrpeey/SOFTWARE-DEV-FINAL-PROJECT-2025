@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, current_app, send_from_directory
 from flask_login import login_required, current_user
 from app import db
+from app.models.notification import Notification
 from app.models.book import Book, Category
 from app.models.borrowing import BorrowingTransaction
 from app.models.review import BookReview
@@ -16,7 +17,7 @@ main_bp = Blueprint('main', __name__)
 @main_bp.route('/book/', endpoint='book_list')
 @login_required
 def book_list():
-    # Get all active books for the current user (customize as needed)
+    # Get all active books for the current user (customize as needed) 
     books = Book.query.filter_by(is_active=True).order_by(Book.title).all()
     return render_template('books/my_books.html', books=books)
 
@@ -36,7 +37,7 @@ main_bp = Blueprint('main', __name__)
 @main_bp.route('/book/<int:book_id>/review/<int:review_id>/edit', methods=['POST'])
 @login_required
 def edit_review(book_id, review_id):
-    review = BookReview.query.get_or_404(review_id)
+    review = BookReview.query.get_or_404(review_id) 
     if review.user_id != current_user.id:
         flash('You can only edit your own review.', 'error')
         return redirect(url_for('main.book_detail', book_id=book_id))
@@ -61,7 +62,7 @@ def edit_review(book_id, review_id):
 @main_bp.route('/book/<int:book_id>/review/<int:review_id>/delete', methods=['POST'])
 @login_required
 def delete_review(book_id, review_id):
-    review = BookReview.query.get_or_404(review_id)
+    review = BookReview.query.get_or_404(review_id) 
     if review.user_id != current_user.id:
         flash('You can only delete your own review.', 'error')
         return redirect(url_for('main.book_detail', book_id=book_id))
@@ -78,15 +79,15 @@ def delete_review(book_id, review_id):
 @main_bp.route('/')
 def index():
     """Homepage with featured books and recent additions"""
-    import random
+    import random 
     # Get featured books
     featured_books = Book.query.filter_by(
-        is_featured=True,
+        is_featured=True, 
         is_active=True
     ).limit(3).all()
     # Get recent additions
     recent_books = Book.query.filter_by(
-        is_active=True
+        is_active=True 
     ).order_by(db.desc(Book.created_at)).limit(8).all()
     # Get popular books
     popular_books = Book.query.filter_by(

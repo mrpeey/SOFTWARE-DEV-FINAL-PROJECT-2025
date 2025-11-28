@@ -38,7 +38,7 @@
                     <div class="row g-4 align-items-center">
                         <div class="col-md-4 text-center">
                             {% if book.cover_image %}
-                                <img src="{{ url_for('static', filename=book.cover_image) }}" class="img-fluid rounded shadow" alt="{{ book.title }}" style="width:100%;max-width:500px;height:auto;max-height:400px;object-fit:contain;">
+                                <img src="{{ url_for('static', filename='uploads/covers/' + book.cover_image) }}" class="img-fluid rounded shadow" alt="{{ book.title }}" style="width:100%;max-width:500px;height:auto;max-height:400px;object-fit:contain;">
                             {% elif book.svg_placeholder %}
                                 <img src="{{ url_for('static', filename=book.svg_placeholder) }}" class="img-fluid rounded shadow" alt="{{ book.title }} SVG" style="width:100%;max-width:500px;height:auto;max-height:400px;object-fit:contain;">
                             {% else %}

@@ -4,6 +4,16 @@
 
 {% block content %}
 <div class="container-fluid">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'success' else 'danger' if category == 'error' else 'info' }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
     <!-- Page Header -->
     <div class="row mb-4">
         <div class="col-12">
@@ -15,9 +25,15 @@
                     <p class="text-muted">Add, edit, and organize your library collection</p>
                 </div>
                 <div>
-                    <a href="{{ url_for('admin.add_book') }}" class="btn btn-primary">
-                        <i class="fas fa-plus me-2"></i>Add New Book
-                    </a>
+                        <a href="{{ url_for('admin.add_book') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Add New Book
+                        </a>
+                        <form method="post" action="{{ url_for('admin.load_free_books') }}" style="display:inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" style="display:none;" />
+                            <button type="submit" class="btn btn-success ms-2" onclick="return confirm('Load 10 free books per active category? This may take a moment.')">
+                                <i class="fas fa-download me-2"></i>Load Free Books
+                            </button>
+                        </form>
                 </div>
             </div>
         </div>
@@ -130,19 +146,26 @@
                                                      class="img-thumbnail" style="width: 50px; height: 60px; object-fit: cover;" 
                                                      alt="{{ book.title }}">
                                             {% else %}
+                                                {% set category_colors = {
+                                                    'Academic': '#3b82f6',
+                                                    'Literature': '#a855f7',
+                                                    'Science': '#14b8a6',
+                                                    'Technology': '#0ea5e9',
+                                                    'History': '#f59e42',
+                                                    'Culture': '#f43f5e',
+                                                    'Health': '#22c55e',
+                                                    'Medicine': '#eab308',
+                                                    'Agriculture': '#84cc16',
+                                                    'Business': '#f97316',
+                                                    'Economics': '#e11d48',
+                                                    'Government': '#6366f1',
+                                                    'Law': '#f43f5e',
+                                                    'Digital': '#0ea5e9',
+                                                    'Literacy': '#a855f7',
+                                                    'Local': '#f59e42'
+                                                } %}
+                                                {% set cat_color = category_colors.get(book.category.name.split(' ')[0] if book.category else '', '#764ba2') %}
                                                 {% include 'shared/book_cover_svg.html' %}
-                                                            <stop offset="0%" stop-color="{{ cat_colors[0] }}" />
-                                                            <stop offset="100%" stop-color="{{ cat_colors[1] }}" />
-                                                        </linearGradient>
-                                                    </defs>
-                                                    <rect width="50" height="60" rx="8" fill="url(#grad{{ loop.index }})"/>
-                                                    <text x="50%" y="40%" text-anchor="middle" fill="#fff" font-size="{{ dynamic_title_font }}" font-weight="bold" font-family="Arial, sans-serif">{{ book.title|truncate(18, True, '...') }}</text>
-                                                    <text x="50%" y="65%" text-anchor="middle" fill="#e0e0e0" font-size="{{ dynamic_author_font }}" font-family="Arial, sans-serif">{{ book.author|truncate(14, True, '...') }}</text>
-                                                    <g>
-                                                        <circle cx="40" cy="10" r="7" fill="#fff" opacity="0.15" />
-                                                        <text x="43" y="14" text-anchor="middle" fill="#fff" font-size="10" font-family="Arial">&#128214;</text>
-                                                    </g>
-                                                </svg>
                                             {% endif %}
                                     </td>
                                     <td>
@@ -221,7 +244,7 @@
                             <ul class="pagination justify-content-center mb-0">
                                 {% if pagination.has_prev %}
                                     <li class="page-item">
-                                        <a class="page-link" href="{{ url_for('admin.manage_books', page=pagination.prev_num, **request.args) }}">
+                                        <a class="page-link" href="{{ url_for('admin.manage_books', page=pagination.prev_num) }}">
                                             <i class="fas fa-chevron-left"></i>
                                         </a>
                                     </li>
@@ -231,7 +254,7 @@
                                     {% if page_num %}
                                         {% if page_num != pagination.page %}
                                             <li class="page-item">
-                                                <a class="page-link" href="{{ url_for('admin.manage_books', page=page_num, **request.args) }}">{{ page_num }}</a>
+                                                <a class="page-link" href="{{ url_for('admin.manage_books', page=page_num) }}">{{ page_num }}</a>
                                             </li>
                                         {% else %}
                                             <li class="page-item active">
@@ -247,7 +270,7 @@
                                 
                                 {% if pagination.has_next %}
                                     <li class="page-item">
-                                        <a class="page-link" href="{{ url_for('admin.manage_books', page=pagination.next_num, **request.args) }}">
+                                        <a class="page-link" href="{{ url_for('admin.manage_books', page=pagination.next_num) }}">
                                             <i class="fas fa-chevron-right"></i>
                                         </a>
                                     </li>

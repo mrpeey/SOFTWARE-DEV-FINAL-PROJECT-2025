@@ -2,7 +2,80 @@
 {% block content %}
 <div class="container mt-5">
     <h2>Billing Management</h2>
-    <p>This is the admin billing page. Customize this template as needed.</p>
-    <!-- Add billing details, tables, forms, etc. here -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-warning text-dark mb-3">
+                <div class="card-body text-center">
+                    <h4>{{ stats.total_pending | round(2) }}</h4>
+                    <p class="mb-0">Total Pending</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white mb-3">
+                <div class="card-body text-center">
+                    <h4>{{ stats.total_paid | round(2) }}</h4>
+                    <p class="mb-0">Total Paid</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-danger text-white mb-3">
+                <div class="card-body text-center">
+                    <h4>{{ stats.total_overdue | round(2) }}</h4>
+                    <p class="mb-0">Total Overdue</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Billing Records</h5>
+        </div>
+        <div class="card-body p-0">
+            {% if billing_records %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>User</th>
+                            <th>Description</th>
+                            <th>Amount</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Due Date</th>
+                            <th>Paid Date</th>
+                            <th>Payment Method</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in billing_records %}
+                        <tr>
+                            <td>{{ record.user.get_full_name() if record.user else 'N/A' }}</td>
+                            <td>{{ record.description }}</td>
+                            <td>LSL {{ '%.2f'|format(record.amount) }}</td>
+                            <td>{{ record.billing_type.replace('_', ' ').title() }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'success' if record.status == 'paid' else 'warning' if record.status == 'pending' else 'danger' if record.status == 'overdue' else 'secondary' }}">
+                                    {{ record.status.title() }}
+                                </span>
+                            </td>
+                            <td>{{ record.due_date.strftime('%b %d, %Y') if record.due_date else 'N/A' }}</td>
+                            <td>{{ record.paid_date.strftime('%b %d, %Y') if record.paid_date else '-' }}</td>
+                            <td>{{ record.payment_method if record.payment_method else '-' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-receipt fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">No Billing Records Found</h4>
+                <p class="text-muted">No billing records are available.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
 </div>
 {% endblock %}

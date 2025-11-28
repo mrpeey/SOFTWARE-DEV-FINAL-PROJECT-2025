@@ -173,12 +173,16 @@
                                                 </div>
                                             {% endif %}
                                             <div>
-                                                <h6 class="mb-0">{{ borrowing.book.title }}</h6>
-                                                <small class="text-muted">{{ borrowing.book.author }}</small>
-                                                <br>
-                                                <span class="text-muted">ISBN: {{ borrowing.book.isbn }}</span>
-                                                {% if borrowing.book.is_digital %}
-                                                    <br><span class="badge bg-success">Digital</span>
+                                                {% if borrowing.book %}
+                                                    <h6 class="mb-0">{{ borrowing.book.title }}</h6>
+                                                    <small class="text-muted">{{ borrowing.book.author }}</small>
+                                                    <br>
+                                                    <span class="text-muted">ISBN: {{ borrowing.book.isbn }}</span>
+                                                    {% if borrowing.book.is_digital %}
+                                                        <br><span class="badge bg-success">Digital</span>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="text-danger">Book details missing</span>
                                                 {% endif %}
                                             </div>
                                         </div>

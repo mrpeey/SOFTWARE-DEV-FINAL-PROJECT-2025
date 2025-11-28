@@ -12,13 +12,21 @@
         </div>
         <a href="{{ url_for('main.index') }}" class="btn btn-secondary">Back to Home</a>
     {% else %}
-        <div class="alert alert-success">
-            <p>You are eligible to borrow this book.</p>
-        </div>
-        <form method="post">
-            <button type="submit" class="btn btn-primary">Confirm Borrow</button>
-            <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="btn btn-secondary">Cancel</a>
-        </form>
+        {% if request.method == 'POST' %}
+            <div class="alert alert-info">
+                <strong>Success!</strong> You have successfully borrowed the book. Your request is <b>pending admin approval</b>.
+            </div>
+            <a href="{{ url_for('books.my_books') }}" class="btn btn-primary">Go to My Books</a>
+        {% else %}
+            <div class="alert alert-success">
+                <p>You are eligible to borrow this book.</p>
+            </div>
+            <form method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" style="display:none;" />
+                <button type="submit" class="btn btn-primary">Confirm Borrow</button>
+                <a href="{{ url_for('main.book_detail', book_id=book.id) }}" class="btn btn-secondary">Cancel</a>
+            </form>
+        {% endif %}
     {% endif %}
 </div>
 {% endblock %}

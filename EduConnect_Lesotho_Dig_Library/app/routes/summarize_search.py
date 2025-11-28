@@ -1,6 +1,5 @@
 from flask import Blueprint, request, jsonify
-import os
-import requests
+import os, requests
 
 summarize_search_bp = Blueprint('summarize_search', __name__)
 

@@ -1,119 +1,29 @@
+
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, current_app
+import requests
+import random
+import string
+import os
+from werkzeug.utils import secure_filename
 admin_bp = Blueprint('admin', __name__)
-from flask_login import login_required, current_user
+from flask_login import login_required, current_user, logout_user
 from flask_wtf.csrf import CSRFProtect, generate_csrf
 from app import db
 from app.models.user import User, UserRole
 from app.models.book import Book, Category
 from app.models.borrowing import BorrowingTransaction
+from app.models.notification import Notification
 from app.models.review import BookReview
 from app.models.reservation import BookReservation
 from app.models.offline import DigitalDownload, ReadingSession
 from app.models.subscription import SubscriptionPlan, UserSubscription, BillingRecord, Payment
 from werkzeug.utils import secure_filename
 from functools import wraps
-import os
+import os, logging
 from datetime import datetime, date, timedelta
 from decimal import Decimal
 from app.forms import SubscriptionPlanForm
-from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, current_app
-admin_bp = Blueprint('admin', __name__)
-from flask_login import login_required, current_user
-from flask_wtf.csrf import CSRFProtect, generate_csrf
-from app import db
-from app.models.user import User, UserRole
-from app.models.book import Book, Category
-from app.models.borrowing import BorrowingTransaction
-from app.models.review import BookReview
-from app.models.reservation import BookReservation
-from app.models.offline import DigitalDownload, ReadingSession
-from app.models.subscription import SubscriptionPlan, UserSubscription, BillingRecord, Payment
-from werkzeug.utils import secure_filename
-from functools import wraps
-import os
-from datetime import datetime, date, timedelta
-from decimal import Decimal
-from app.forms import SubscriptionPlanForm
-
-
-from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, current_app
-admin_bp = Blueprint('admin', __name__)
-from flask_login import login_required, current_user
-from flask_wtf.csrf import CSRFProtect, generate_csrf
-from app import db
-from app.models.user import User, UserRole
-from app.models.book import Book, Category
-from app.models.borrowing import BorrowingTransaction
-from app.models.review import BookReview
-from app.models.reservation import BookReservation
-from app.models.offline import DigitalDownload, ReadingSession
-from app.models.subscription import SubscriptionPlan, UserSubscription, BillingRecord, Payment
-from werkzeug.utils import secure_filename
-from functools import wraps
-import os
-from datetime import datetime, date, timedelta
-from decimal import Decimal
-from app.forms import SubscriptionPlanForm
-
-
-from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, current_app
-admin_bp = Blueprint('admin', __name__)
-from flask_login import login_required, current_user
-from flask_wtf.csrf import CSRFProtect, generate_csrf
-from app import db
-from app.models.user import User, UserRole
-from app.models.book import Book, Category
-from app.models.borrowing import BorrowingTransaction
-from app.models.review import BookReview
-from app.models.reservation import BookReservation
-from app.models.offline import DigitalDownload, ReadingSession
-from app.models.subscription import SubscriptionPlan, UserSubscription, BillingRecord, Payment
-from werkzeug.utils import secure_filename
-from functools import wraps
-import os
-from datetime import datetime, date, timedelta
-from decimal import Decimal
-from app.forms import SubscriptionPlanForm
-
-
-from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, current_app
-admin_bp = Blueprint('admin', __name__)
-from flask_login import login_required, current_user
-from flask_wtf.csrf import CSRFProtect, generate_csrf
-from app import db
-from app.models.user import User, UserRole
-from app.models.book import Book, Category
-from app.models.borrowing import BorrowingTransaction
-from app.models.review import BookReview
-from app.models.reservation import BookReservation
-from app.models.offline import DigitalDownload, ReadingSession
-from app.models.subscription import SubscriptionPlan, UserSubscription, BillingRecord, Payment
-from werkzeug.utils import secure_filename
-from functools import wraps
-import os
-from datetime import datetime, date, timedelta
-from decimal import Decimal
-from app.forms import SubscriptionPlanForm
-
-
-from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify, current_app
-admin_bp = Blueprint('admin', __name__)
-from flask_login import login_required, current_user
-from flask_wtf.csrf import CSRFProtect, generate_csrf
-from app import db
-from app.models.user import User, UserRole
-from app.models.book import Book, Category
-from app.models.borrowing import BorrowingTransaction
-from app.models.review import BookReview
-from app.models.reservation import BookReservation
-from app.models.offline import DigitalDownload, ReadingSession
-from app.models.subscription import SubscriptionPlan, UserSubscription, BillingRecord, Payment
-from werkzeug.utils import secure_filename
-from functools import wraps
-import os
-from datetime import datetime, date, timedelta
-from decimal import Decimal
-from app.forms import SubscriptionPlanForm
+from flask import make_response
 
 def admin_required(f):
     """Decorator to require admin access"""
@@ -135,14 +45,148 @@ def librarian_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def generate_svg_cover(title, author, color):
+    # Simple SVG generator for book covers
+    svg = f'''<svg width="200" height="300" xmlns="http://www.w3.org/2000/svg">
+    <rect width="200" height="300" fill="{color}"/>
+    <text x="100" y="140" font-size="20" fill="white" text-anchor="middle" font-family="Arial">{title[:18]}</text>
+    <text x="100" y="180" font-size="14" fill="white" text-anchor="middle" font-family="Arial">{author[:18]}</text>
+    </svg>'''
+    return svg
+
+def fetch_free_books_for_category(category_name, count=10):
+    # Use Open Library Search API for free books
+    url = f"https://openlibrary.org/search.json?subject={category_name}&has_fulltext=true&limit={count}"
+    try:
+        resp = requests.get(url, timeout=10)
+        if resp.status_code == 200:
+            data = resp.json()
+            return data.get('docs', [])
+        return []
+    except Exception as e:
+        current_app.logger.error(f"Open Library fetch error: {str(e)}")
+        return []
+
+def save_svg_to_file(svg_content, filename):
+    covers_dir = os.path.join(current_app.root_path, '../static/uploads/covers')
+    os.makedirs(covers_dir, exist_ok=True)
+    file_path = os.path.join(covers_dir, filename)
+    with open(file_path, 'w', encoding='utf-8') as f:
+        f.write(svg_content)
+    return f'covers/{filename}'
+
+@admin_bp.route('/books/load-free', methods=['POST'])
+@librarian_required
+def load_free_books():
+    """Automatically load 10 free books per active category"""
+    categories = Category.query.filter_by(is_active=True).all()
+    palette = ["#4e73df", "#1cc88a", "#36b9cc", "#f6c23e", "#e74a3b", "#858796", "#5a5c69", "#fd7e14", "#20c997", "#6610f2"]
+    added_count = 0
+    skipped_books = []
+    for idx, category in enumerate(categories):
+        color = palette[idx % len(palette)]
+        books_data = fetch_free_books_for_category(category.name, count=10)
+        for book_info in books_data:
+            title = book_info.get('title', 'Untitled')
+            author = ', '.join(book_info.get('author_name', ['Unknown']))
+            isbn = book_info.get('isbn', [''])[0] if book_info.get('isbn') else None
+            publisher = book_info.get('publisher', [''])[0] if book_info.get('publisher') else ''
+            publication_year = book_info.get('first_publish_year', None)
+            pages = book_info.get('number_of_pages_median', None)
+            language = 'English'
+            description = book_info.get('subtitle', '')
+            is_digital = True
+            total_copies = 1
+            is_featured = False
+            # Sanitize file name for cover image
+            safe_title = secure_filename(title)
+            safe_author = secure_filename(author)
+            cover_image = None
+            if book_info.get('cover_i'):
+                cover_url = f"https://covers.openlibrary.org/b/id/{book_info['cover_i']}-L.jpg"
+                try:
+                    img_resp = requests.get(cover_url, timeout=10)
+                    if img_resp.status_code == 200:
+                        ext = '.jpg'
+                        fname = f"{secure_filename(category.name)}_{safe_title}_{safe_author}_{random.randint(1000,9999)}{ext}"
+                        covers_dir = os.path.join(current_app.root_path, '../static/uploads/covers')
+                        os.makedirs(covers_dir, exist_ok=True)
+                        img_path = os.path.join(covers_dir, fname)
+                        with open(img_path, 'wb') as img_file:
+                            img_file.write(img_resp.content)
+                        cover_image = f'covers/{fname}'
+                except Exception as e:
+                    current_app.logger.error(f"Cover image download error: {str(e)}")
+            if not cover_image:
+                svg = generate_svg_cover(title, author, color)
+                fname = f"{secure_filename(category.name)}_{safe_title}_{safe_author}_{random.randint(1000,9999)}.svg"
+                cover_image = save_svg_to_file(svg, fname)
+            # Check for duplicate ISBN
+            if isbn and Book.query.filter_by(isbn=isbn).first():
+                skipped_books.append({'title': title, 'author': author, 'category': category.name, 'reason': 'Duplicate ISBN'})
+                continue
+            # Add book
+            book = Book(
+                title=title,
+                author=author,
+                isbn=isbn,
+                publisher=publisher,
+                publication_year=publication_year,
+                pages=pages,
+                language=language,
+                description=description,
+                category_id=category.id,
+                is_digital=is_digital,
+                cover_image=cover_image,
+                total_copies=total_copies,
+                available_copies=total_copies,
+                is_featured=is_featured,
+                created_by=current_user.id
+            )
+            try:
+                db.session.add(book)
+                db.session.commit()
+                added_count += 1
+            except Exception as e:
+                db.session.rollback()
+                skipped_books.append({'title': title, 'author': author, 'category': category.name, 'reason': str(e)})
+                current_app.logger.error(f"Error adding book: {str(e)}")
+    summary = f"{added_count} free books loaded for all active categories."
+    if skipped_books:
+        summary += f" {len(skipped_books)} books skipped. "
+        for b in skipped_books:
+            summary += f"[Skipped: {b['title']} by {b['author']} ({b['category']}) - {b['reason']}] "
+    flash(summary, "success")
+    return redirect(url_for('admin.manage_books'))
+
+def admin_required(f):
+    """Decorator to require admin access"""
+    @wraps(f) 
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or not current_user.is_admin():
+            flash('You need administrator privileges to access this page.', 'error')
+            return redirect(url_for('main.index'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+def librarian_required(f):
+    """Decorator to require librarian or admin access"""
+    @wraps(f) 
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or not (current_user.is_librarian() or current_user.is_admin()):
+            flash('You need librarian or administrator privileges to access this page.', 'error')
+            return redirect(url_for('main.index'))
+        return f(*args, **kwargs)
+    return decorated_function
+
 @admin_bp.route('/dashboard')
 @login_required
 @librarian_required
-def dashboard():
+def dashboard(): 
     """Admin/Librarian dashboard"""
     # Get statistics
     stats = {
-        'total_books': Book.query.filter_by(is_active=True).count(),
+'total_books': Book.query.filter_by(is_active=True).count(), 
         'digital_books': Book.query.filter_by(is_active=True, is_digital=True).count(),
         'total_users': User.query.filter_by(is_active=True).count(),
         'active_borrowings': BorrowingTransaction.query.filter(
@@ -158,14 +202,28 @@ def dashboard():
     # Recent activity aggregation
     recent_activity = []
 
-    # Recent books
+    # Recent book
+    palette = ["#4e73df", "#1cc88a", "#36b9cc", "#f6c23e", "#e74a3b", "#858796", "#5a5c69", "#fd7e14", "#20c997", "#6610f2"]
     for book in Book.query.order_by(Book.created_at.desc()).limit(5).all():
+        # Get category color
+        category = Category.query.get(book.category_id)
+        color = palette[0]
+        if category:
+            idx = (category.id - 1) % len(palette)
+            color = palette[idx]
+        cover_image = book.cover_image
+        if not cover_image:
+            svg = generate_svg_cover(book.title, book.author, color)
+            fname = f"{category.name if category else 'General'}_{book.title[:18]}_{book.author[:18]}_{random.randint(1000,9999)}.svg"
+            cover_image = save_svg_to_file(svg, fname)
         recent_activity.append({
             'type': 'book',
             'type_class': 'primary',
             'description': f"Book added: {book.title}",
             'details': f"By {book.author}",
-            'timestamp': book.created_at
+            'timestamp': book.created_at,
+            'cover_image': cover_image,
+            'category_color': color
         })
 
     # Recent users
@@ -216,7 +274,7 @@ def dashboard():
 
     last_month = datetime.utcnow() - timedelta(days=30)
     popular_books = db.session.query(
-        Book.id, Book.title, Book.author,
+        Book.id, Book.title, Book.author, 
         db.func.count(BorrowingTransaction.id).label('borrow_count')
     ).join(BorrowingTransaction).filter(
         BorrowingTransaction.borrowed_date >= last_month
@@ -251,7 +309,7 @@ def dashboard():
 
     return render_template('admin/dashboard.html',
                          stats=stats,
-                         recent_activity=recent_activity,
+                 
                          recent_borrowings=recent_borrowings,
                          recent_returns=recent_returns,
                          overdue_books=overdue_books,
@@ -296,8 +354,9 @@ def manage_books():
     books = pagination.items
     
     categories = Category.query.filter_by(is_active=True).order_by(Category.name).all()
-    # Define a color palette
-    palette = ["#4e73df", "#1cc88a", "#36b9cc", "#f6c23e", "#e74a3b", "#858796", "#5a5c69", "#fd7e14", "#20c997", "#6610f2"]
+    palette = [
+        "#4e73df", "#1cc88a", "#36b9cc", "#f6c23e", "#e74a3b", "#858796", "#5a5c69", "#fd7e14", "#20c997", "#6610f2"
+    ]
     # Map category id to a color (cycle if more categories than colors)
     cat_colors = {}
     for idx, cat in enumerate(categories):
@@ -378,9 +437,33 @@ def add_book():
                 except Exception as e:
                     flash('Error uploading cover image.', 'warning')
                     current_app.logger.error(f'Cover upload error: {str(e)}')
-        # If no cover image uploaded, assign default SVG
+        # If no cover image uploaded, assign SVG based on category
         if not cover_image:
-            cover_image = 'covers/default_cover.svg'  # Ensure this SVG exists in your static/uploads/covers folder
+            from app.models.book import Category
+            category_obj = Category.query.get(category_id)
+            category_colors = {
+                'Academic': '#3b82f6',
+                'Literature': '#a855f7',
+                'Science': '#14b8a6',
+                'Technology': '#0ea5e9',
+                'History': '#f59e42',
+                'Culture': '#f43f5e',
+                'Health': '#22c55e',
+                'Medicine': '#eab308',
+                'Agriculture': '#84cc16',
+                'Business': '#f97316',
+                'Economics': '#e11d48',
+                'Government': '#6366f1',
+                'Law': '#f43f5e',
+                'Digital': '#0ea5e9',
+                'Literacy': '#a855f7',
+                'Local': '#f59e42'
+            }
+            cat_name = category_obj.name.split(' ')[0] if category_obj else 'Academic'
+            color = category_colors.get(cat_name, '#764ba2')
+            svg = generate_svg_cover(title, author, color)
+            fname = f"{secure_filename(cat_name)}_{secure_filename(title)}_{secure_filename(author)}.svg"
+            cover_image = save_svg_to_file(svg, fname)
         
         # Create book
         book = Book(
@@ -423,7 +506,7 @@ def add_book():
 def edit_book(book_id):
     """Edit a book"""
     book = Book.query.get_or_404(book_id)
-    
+
     if request.method == 'POST':
         errors = []
         # Validate required fields
@@ -454,75 +537,57 @@ def edit_book(book_id):
         book.title = title
         book.author = author
         book.isbn = isbn
-        book.publisher = request.form.get('publisher', '').strip()
-
-        # Handle publication date
-        pub_date_str = request.form.get('publication_date', '').strip()
-        if pub_date_str:
-            try:
-                from datetime import datetime as dt
-                book.publication_date = dt.strptime(pub_date_str, '%Y-%m-%d').date()
-            except Exception as e:
-                flash(f'Invalid publication date: {pub_date_str}', 'error')
-
-        book.edition = request.form.get('edition', '').strip()
-        book.pages = request.form.get('pages', type=int)
-        book.language = request.form.get('language', 'English').strip()
-        book.description = request.form.get('description', '').strip()
         book.category_id = category_id
         book.total_copies = total_copies
         book.available_copies = available_copies
-        book.location = request.form.get('location', '').strip()
-        book.tags = request.form.get('tags', '').strip()
-        book.reading_level = request.form.get('reading_level', '').strip()
-        book.is_digital = bool(request.form.get('is_digital'))
-        book.download_url = request.form.get('download_url', '').strip()
-        book.is_featured = bool(request.form.get('is_featured'))
-        book.is_active = bool(request.form.get('is_active', True))
-        book.updated_at = datetime.utcnow()
+        # ...existing code...
 
-        # Handle cover image upload with validation
-        try:
-            if 'cover_image' in request.files:
-                cover_file = request.files['cover_image']
-                if cover_file and cover_file.filename:
-                    allowed_types = {'image/jpeg', 'image/png', 'image/gif', 'image/svg+xml', 'image/webp'}
-                    max_size = 5 * 1024 * 1024  # 5MB
-                    if cover_file.mimetype not in allowed_types:
-                        flash('Invalid image type. Allowed types: JPEG, PNG, GIF, SVG, WEBP.', 'error')
-                    elif cover_file.content_length and cover_file.content_length > max_size:
-                        flash('Image file is too large (max 5MB).', 'error')
-                    else:
-                        filename = secure_filename(cover_file.filename)
-                        timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S_')
-                        filename = timestamp + filename
-                        upload_path = os.path.join(current_app.root_path, 'static', 'uploads', 'covers')
-                        os.makedirs(upload_path, exist_ok=True)
-                        full_path = os.path.join(upload_path, filename)
-                        cover_file.save(full_path)
-                        book.cover_image = filename
-                        current_app.logger.info(f'Cover image saved: {filename}')
-        except Exception as e:
-            current_app.logger.error(f'Cover image upload error: {str(e)}')
-            flash(f'Error uploading cover image: {str(e)}', 'warning')
+        # Handle cover image upload
+        cover_file = request.files.get('cover_image')
+        if cover_file and cover_file.filename:
+            allowed_types = {'image/jpeg', 'image/png', 'image/gif', 'image/svg+xml', 'image/webp'}
+            max_size = 5 * 1024 * 1024
+            if cover_file.mimetype not in allowed_types:
+                flash('Invalid image type. Allowed types: JPEG, PNG, GIF, SVG, WEBP.', 'error')
+            elif cover_file.content_length and cover_file.content_length > max_size:
+                flash('Image file is too large (max 5MB).', 'error')
+            else:
+                filename = secure_filename(cover_file.filename)
+                timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S_')
+                filename = timestamp + filename
+                upload_path = os.path.join(current_app.root_path, 'static', 'uploads', 'covers')
+                os.makedirs(upload_path, exist_ok=True)
+                full_path = os.path.join(upload_path, filename)
+                cover_file.save(full_path)
+                book.cover_image = f'covers/{filename}'
+                current_app.logger.info(f'Cover image saved: {filename}')
 
-        # Handle digital book file upload
-        try:
-            if book.is_digital and 'file_upload' in request.files:
-                book_file = request.files['file_upload']
-                if book_file and book_file.filename:
-                    filename = secure_filename(book_file.filename)
-                    timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S_')
-                    filename = timestamp + filename
-                    upload_path = os.path.join(current_app.root_path, 'static', 'uploads', 'books')
-                    os.makedirs(upload_path, exist_ok=True)
-                    full_path = os.path.join(upload_path, filename)
-                    book_file.save(full_path)
-                    book.file_path = filename
-                    current_app.logger.info(f'Book file saved: {filename}')
-        except Exception as e:
-            current_app.logger.error(f'Book file upload error: {str(e)}')
-            flash(f'Error uploading book file: {str(e)}', 'warning')
+        # If no cover image after upload, assign SVG based on category
+        if not book.cover_image:
+            category_obj = Category.query.get(book.category_id)
+            category_colors = {
+                'Academic': '#3b82f6',
+                'Literature': '#a855f7',
+                'Science': '#14b8a6',
+                'Technology': '#0ea5e9',
+                'History': '#f59e42',
+                'Culture': '#f43f5e',
+                'Health': '#22c55e',
+                'Medicine': '#eab308',
+                'Agriculture': '#84cc16',
+                'Business': '#f97316',
+                'Economics': '#e11d48',
+                'Government': '#6366f1',
+                'Law': '#f43f5e',
+                'Digital': '#0ea5e9',
+                'Literacy': '#a855f7',
+                'Local': '#f59e42'
+            }
+            cat_name = category_obj.name.split(' ')[0] if category_obj else 'Academic'
+            color = category_colors.get(cat_name, '#764ba2')
+            svg = generate_svg_cover(book.title, book.author, color)
+            fname = f"{secure_filename(cat_name)}_{secure_filename(book.title)}_{secure_filename(book.author)}.svg"
+            book.cover_image = save_svg_to_file(svg, fname)
 
         try:
             db.session.commit()
@@ -532,7 +597,6 @@ def edit_book(book_id):
             db.session.rollback()
             flash(f'An error occurred while updating the book: {str(e)}', 'error')
             current_app.logger.error(f'Edit book error: {str(e)}')
-    
     categories = Category.query.filter_by(is_active=True).order_by(Category.name).all()
     return render_template('admin/edit_book.html', book=book, categories=categories)
 
@@ -964,7 +1028,10 @@ def manage_borrowings():
     query = BorrowingTransaction.query
     
     if status:
-        query = query.filter_by(status=status)
+        if status == 'active':
+            query = query.filter(BorrowingTransaction.status.in_(['borrowed', 'pending']))
+        else:
+            query = query.filter_by(status=status)
     
     if search:
         search_filter = db.or_(
@@ -975,16 +1042,32 @@ def manage_borrowings():
         )
         query = query.filter(search_filter)
     
+    # Borrowing statistics for dashboard cards
+    total_active = BorrowingTransaction.query.filter(BorrowingTransaction.status.in_(['borrowed', 'pending'])).count()
+    due_soon = BorrowingTransaction.query.filter(
+        BorrowingTransaction.status.in_(['borrowed', 'pending']),
+        BorrowingTransaction.due_date <= date.today() + timedelta(days=3),
+        BorrowingTransaction.due_date >= date.today()
+    ).count()
+    overdue = BorrowingTransaction.query.filter_by(status='overdue').count()
+    returned_today = BorrowingTransaction.query.filter_by(status='returned').filter(
+        BorrowingTransaction.returned_date >= date.today()
+    ).count()
+
     pagination = query.order_by(
         BorrowingTransaction.borrowed_date.desc()
     ).paginate(page=page, per_page=4, error_out=False)
     transactions = pagination.items
-    
+
     return render_template('admin/borrowings.html',
                          transactions=transactions,
                          pagination=pagination,
                          status=status,
-                         search=search)
+                         search=search,
+                         total_active=total_active,
+                         due_soon=due_soon,
+                         overdue=overdue,
+                         returned_today=returned_today)
 
 @admin_bp.route('/borrowings/bulk-return', methods=['GET', 'POST'])
 @librarian_required
