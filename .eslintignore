@@ -1,3 +1,3 @@
 # Ignore Jinja/Flask HTML templates for linting
 EduConnect_Lesotho_Dig_Library/app/templates/
-EduConnect_Lesotho_Dig_Library/app/templates/**
+
